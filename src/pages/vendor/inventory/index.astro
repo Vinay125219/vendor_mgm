@@ -88,14 +88,14 @@ const lastSyncAt = seedState.runtime.lastInventorySyncAt;
   </UiTable>
 </VendorShell>
 
-<script>
+<script is:inline>
   import { countLowStock, loadState, runInventorySyncAll, updateProductStock } from '@/lib/client-store';
 
-  function toast(msg: string, level = 'success') {
+  function toast(msg, level = 'success') {
     window.dispatchEvent(new CustomEvent('vs:toast', { detail: { message: msg, level } }));
   }
 
-  function updateRowHealth(row: Element, stock: number) {
+  function updateRowHealth(row, stock) {
     const health = row.querySelector('.vs-inv-health');
     if (!health) return;
     const badge = stock < 10 ? 'Reorder' : 'Healthy';
@@ -125,7 +125,7 @@ const lastSyncAt = seedState.runtime.lastInventorySyncAt;
       const id = row.getAttribute('data-product-id');
       const input = row.querySelector('.vs-inv-stock');
       if (!id || !input) return;
-      const stock = Number((input as HTMLInputElement).value);
+      const stock = Number(input.value);
       const updated = updateProductStock(id, stock);
       if (!updated) {
         toast('Save failed', 'error');

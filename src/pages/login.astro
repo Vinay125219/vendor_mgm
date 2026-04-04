@@ -103,11 +103,11 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
       </div>
     </div>
 
-    <script lang="ts" define:vars={{ apiPrefix: API_V1_PREFIX }}>
+    <script is:inline define:vars={{ apiPrefix: API_V1_PREFIX }}>
       const API_V1_PREFIX = apiPrefix;
-      const form = document.getElementById('vs-login-form') as HTMLFormElement;
+      const form = document.getElementById('vs-login-form');
       const errEl = document.getElementById('vs-login-error');
-      const submitBtn = document.getElementById('vs-submit-btn') as HTMLButtonElement;
+      const submitBtn = document.getElementById('vs-submit-btn');
 
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -131,14 +131,14 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
             body: JSON.stringify({ email, password }),
           });
 
-          const body = (await response.json()) as Record<string, unknown>;
+          const body = await response.json();
 
           if (!response.ok || typeof body !== 'object' || body === null) {
             throw new Error('Login failed. Please check your credentials.');
           }
 
           if ('error' in body && typeof body.error === 'object' && body.error !== null) {
-            const error = body.error as Record<string, unknown>;
+            const error = body.error;
             throw new Error(String(error.message || 'Login failed'));
           }
 
@@ -152,14 +152,14 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
             typeof body.user === 'object' &&
             body.user !== null
           ) {
-            const token = body.token as Record<string, unknown>;
-            const user = body.user as Record<string, unknown>;
+            const token = body.token;
+            const user = body.user;
 
             if (typeof token.accessToken === 'string' && typeof token.expiresAt === 'number') {
               const { storeAuthToken } = await import('@/lib/client-auth');
               storeAuthToken(
                 { accessToken: token.accessToken, expiresAt: token.expiresAt },
-                { email: String(user.email || ''), role: String(user.role || 'admin') as any }
+                { email: String(user.email || ''), role: String(user.role || 'admin') }
               );
 
               const params = new URLSearchParams(window.location.search);
