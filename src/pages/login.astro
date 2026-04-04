@@ -103,7 +103,7 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
       </div>
     </div>
 
-    <script define:vars={{ apiPrefix: API_V1_PREFIX }}>
+    <script lang="ts" define:vars={{ apiPrefix: API_V1_PREFIX }}>
       const API_V1_PREFIX = apiPrefix;
       const form = document.getElementById('vs-login-form') as HTMLFormElement;
       const errEl = document.getElementById('vs-login-error');
