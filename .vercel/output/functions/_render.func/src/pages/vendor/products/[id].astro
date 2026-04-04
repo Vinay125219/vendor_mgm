@@ -1,0 +1,67 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import { mockProducts } from '@/services/mock-store';
+import { formatINRFromPaise } from '@/lib/format';
+
+export function getStaticPaths() {
+  return mockProducts.map((p) => ({ params: { id: p.id } }));
+}
+
+const { id } = Astro.params;
+const product = mockProducts.find((p) => p.id === id);
+if (!product) {
+  return Astro.redirect('/vendor/products');
+}
+---
+
+<VendorShell title={product.title}>
+  <PageHeader title={product.title} description={`SKU ${product.sku} · Vendor ${product.vendorId}`}>
+    <UiButton href="/vendor/products" variant="secondary" slot="actions">Back</UiButton>
+    <UiButton variant="primary" slot="actions">Save changes</UiButton>
+  </PageHeader>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <UiCard class="lg:col-span-2" padding="lg">
+      <h2 class="text-base font-semibold">Pricing & inventory</h2>
+      <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+        <div>
+          <dt class="text-vs-muted">Base price</dt>
+          <dd class="font-semibold tabular-nums">{formatINRFromPaise(product.basePricePaise)}</dd>
+        </div>
+        <div>
+          <dt class="text-vs-muted">Stock</dt>
+          <dd class="font-semibold tabular-nums">{product.stock}</dd>
+        </div>
+        <div>
+          <dt class="text-vs-muted">Approval</dt>
+          <dd class="mt-1">
+            <UiBadge variant={product.approvalStatus === 'approved' ? 'approved' : 'pending'}>
+              {product.approvalStatus}
+            </UiBadge>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-vs-muted">Published</dt>
+          <dd class="mt-1">
+            <UiBadge variant={product.published ? 'success' : 'neutral'}>
+              {product.published ? 'Yes' : 'No'}
+            </UiBadge>
+          </dd>
+        </div>
+      </dl>
+    </UiCard>
+    <UiCard padding="lg">
+      <h2 class="text-base font-semibold">Images</h2>
+      <p class="mt-2 text-sm text-vs-muted">Image pipeline can reuse main site CDN policies.</p>
+      <div class="mt-4 grid grid-cols-2 gap-2">
+        {product.images.map(() => (
+          <div class="aspect-square rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-elevated" />
+        ))}
+      </div>
+    </UiCard>
+  </div>
+</VendorShell>

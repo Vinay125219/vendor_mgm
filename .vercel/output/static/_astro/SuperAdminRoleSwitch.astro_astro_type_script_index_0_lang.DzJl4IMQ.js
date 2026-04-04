@@ -1,0 +1,1 @@
+import{a as r,s}from"./client-auth.DEAEuFTy.js";document.querySelectorAll("[data-vs-sa-role]").forEach(e=>{e.value=r(),e.addEventListener("change",()=>{const o=r(),t=e.value;if(t===o)return;const a=s(t);if(!a.ok){window.dispatchEvent(new CustomEvent("vs:toast",{detail:{message:a.message||"Could not switch role",level:"error"}})),e.value=o;return}window.location.reload()})});

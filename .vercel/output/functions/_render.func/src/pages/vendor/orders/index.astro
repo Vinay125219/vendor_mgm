@@ -1,0 +1,73 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiTable from '@/components/ui/UiTable.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import TableFilter from '@/components/islands/TableFilter.astro';
+import { mockOrders } from '@/services/mock-store';
+import { formatDate, formatINRFromPaise } from '@/lib/format';
+
+function statusVariant(s: string) {
+  if (s === 'paid' || s === 'shipped' || s === 'delivered') return 'success';
+  if (s === 'refunded' || s === 'cancelled') return 'danger';
+  return 'neutral';
+}
+---
+
+<VendorShell title="Orders">
+  <PageHeader
+    title="Orders"
+    description="Fulfillment stages, Razorpay linkage, and return/refund workflows in one operational view."
+  >
+    <UiButton variant="secondary" slot="actions">Export CSV</UiButton>
+  </PageHeader>
+
+  <div class="mb-4 flex flex-wrap gap-2">
+    <UiBadge variant="accent">All</UiBadge>
+    <UiBadge variant="neutral">Unfulfilled</UiBadge>
+    <UiBadge variant="neutral">SLA risk</UiBadge>
+    <UiBadge variant="neutral">Returns</UiBadge>
+  </div>
+
+  <TableFilter placeholder="Search order id, customer, payment…" />
+  <UiTable>
+    <thead class="border-b border-vs-border bg-vs-elevated/80 text-xs uppercase tracking-wide text-vs-muted">
+      <tr>
+        <th class="px-4 py-3 font-semibold">Order</th>
+        <th class="px-4 py-3 font-semibold">Customer</th>
+        <th class="px-4 py-3 font-semibold">Total</th>
+        <th class="px-4 py-3 font-semibold">Status</th>
+        <th class="px-4 py-3 font-semibold">Fulfillment</th>
+        <th class="px-4 py-3 font-semibold">Payment ref</th>
+        <th class="px-4 py-3 font-semibold"></th>
+      </tr>
+    </thead>
+    <tbody data-vs-table>
+      {
+        mockOrders.map((o) => (
+          <tr class="border-b border-vs-border/80 hover:bg-vs-elevated/40">
+            <td class="px-4 py-3 font-mono text-sm text-vs-fg">{o.id}</td>
+            <td class="px-4 py-3 text-sm text-vs-muted">
+              <p>{o.customer.name}</p>
+              <p class="text-xs">{o.customer.email}</p>
+            </td>
+            <td class="px-4 py-3 text-sm tabular-nums">{formatINRFromPaise(o.totalPaise)}</td>
+            <td class="px-4 py-3">
+              <UiBadge variant={statusVariant(o.status)}>{o.status}</UiBadge>
+            </td>
+            <td class="px-4 py-3">
+              <UiBadge variant="info">{o.fulfillmentStage}</UiBadge>
+            </td>
+            <td class="px-4 py-3 font-mono text-xs text-vs-muted">{o.razorpayOrderId ?? '—'}</td>
+            <td class="px-4 py-3 text-right">
+              <UiButton href={`/vendor/orders/${o.id}`} variant="ghost" size="sm">
+                Open
+              </UiButton>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </UiTable>
+</VendorShell>

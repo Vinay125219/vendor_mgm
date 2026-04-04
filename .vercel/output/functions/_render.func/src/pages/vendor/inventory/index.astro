@@ -1,0 +1,152 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import UiTable from '@/components/ui/UiTable.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import TableFilter from '@/components/islands/TableFilter.astro';
+import { mockProducts, mockVendors } from '@/services/mock-store';
+import { countLowStock, loadState } from '@/lib/client-store';
+import { formatDate } from '@/lib/format';
+
+function vendorName(id: string) {
+  return mockVendors.find((v) => v.id === id)?.businessName ?? id;
+}
+
+const seedState = loadState();
+const lowStock = countLowStock(10);
+const lastSyncAt = seedState.runtime.lastInventorySyncAt;
+---
+
+<VendorShell title="Inventory">
+  <PageHeader
+    title="Inventory sync"
+    description="Stock saves in your browser — dashboard KPIs and catalog reflect persisted demo state on this device."
+  >
+    <UiButton variant="primary" slot="actions" id="vs-inv-sync-all">Sync all</UiButton>
+  </PageHeader>
+
+  <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <UiCard padding="md">
+      <p class="text-xs font-semibold uppercase text-vs-muted">Low stock SKUs</p>
+      <p class="mt-2 text-2xl font-bold tabular-nums" id="vs-inv-low-count">{lowStock}</p>
+    </UiCard>
+    <UiCard padding="md">
+      <p class="text-xs font-semibold uppercase text-vs-muted">Last sync</p>
+      <p class="mt-2 text-sm text-vs-muted" id="vs-inv-last-sync">{formatDate(lastSyncAt)}</p>
+    </UiCard>
+    <UiCard padding="md">
+      <p class="text-xs font-semibold uppercase text-vs-muted">Channel</p>
+      <p class="mt-2 text-sm">Storefront + POS</p>
+    </UiCard>
+  </div>
+
+  <TableFilter placeholder="Search SKU…" />
+  <UiTable>
+    <thead class="border-b border-vs-border bg-vs-elevated/80 text-xs uppercase tracking-wide text-vs-muted">
+      <tr>
+        <th class="px-4 py-3 font-semibold">SKU</th>
+        <th class="px-4 py-3 font-semibold">Vendor</th>
+        <th class="px-4 py-3 font-semibold">On hand</th>
+        <th class="px-4 py-3 font-semibold">Health</th>
+        <th class="px-4 py-3 font-semibold"></th>
+      </tr>
+    </thead>
+    <tbody data-vs-table>
+      {
+        mockProducts.map((p) => (
+          <tr class="border-b border-vs-border/80" data-product-id={p.id} data-sku={p.sku}>
+            <td class="px-4 py-3 font-mono text-sm">{p.sku}</td>
+            <td class="px-4 py-3 text-sm text-vs-muted">{vendorName(p.vendorId)}</td>
+            <td class="px-4 py-3">
+              <input
+                type="number"
+                min="0"
+                step="1"
+                class="vs-inv-stock w-24 rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-2 py-1 text-sm tabular-nums"
+                value={p.stock}
+                aria-label={`Stock for ${p.sku}`}
+              />
+            </td>
+            <td class="px-4 py-3 vs-inv-health">
+              <UiBadge variant={p.stock < 10 ? 'warning' : 'success'}>{p.stock < 10 ? 'Reorder' : 'Healthy'}</UiBadge>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <button
+                type="button"
+                class="rounded-[var(--radius-vs-sm)] px-3 py-1.5 text-sm font-semibold text-vs-accent hover:bg-vs-accent-soft"
+                data-inv-save
+              >
+                Save
+              </button>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </UiTable>
+</VendorShell>
+
+<script>
+  import { countLowStock, loadState, runInventorySyncAll, updateProductStock } from '@/lib/client-store';
+
+  function toast(msg: string, level = 'success') {
+    window.dispatchEvent(new CustomEvent('vs:toast', { detail: { message: msg, level } }));
+  }
+
+  function updateRowHealth(row: Element, stock: number) {
+    const health = row.querySelector('.vs-inv-health');
+    if (!health) return;
+    const badge = stock < 10 ? 'Reorder' : 'Healthy';
+    const variant = stock < 10 ? 'warning' : 'success';
+    health.innerHTML = `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide ${variant === 'warning' ? 'bg-amber-500/15 text-amber-800 dark:text-amber-200' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'}" role="status">${badge}</span>`;
+  }
+
+  function syncRowsFromState() {
+    const s = loadState();
+    const lowEl = document.getElementById('vs-inv-low-count');
+    if (lowEl) lowEl.textContent = String(countLowStock(10));
+    document.querySelectorAll('[data-product-id]').forEach((row) => {
+      const id = row.getAttribute('data-product-id');
+      const p = s.products.find((x) => x.id === id);
+      if (!p) return;
+      const input = row.querySelector('.vs-inv-stock');
+      if (input instanceof HTMLInputElement) input.value = String(p.stock);
+      updateRowHealth(row, p.stock);
+    });
+  }
+  syncRowsFromState();
+
+  document.querySelectorAll('[data-inv-save]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const row = btn.closest('tr');
+      if (!row) return;
+      const id = row.getAttribute('data-product-id');
+      const input = row.querySelector('.vs-inv-stock');
+      if (!id || !input) return;
+      const stock = Number((input as HTMLInputElement).value);
+      const updated = updateProductStock(id, stock);
+      if (!updated) {
+        toast('Save failed', 'error');
+        return;
+      }
+      updateRowHealth(row, updated.stock);
+      const lowEl = document.getElementById('vs-inv-low-count');
+      if (lowEl) lowEl.textContent = String(countLowStock(10));
+      toast(`Stock updated for ${row.getAttribute('data-sku') || 'SKU'}`);
+    });
+  });
+
+  document.getElementById('vs-inv-sync-all')?.addEventListener('click', () => {
+    const syncedAt = runInventorySyncAll();
+    const el = document.getElementById('vs-inv-last-sync');
+    if (el) {
+      el.textContent = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(
+        new Date(syncedAt),
+      );
+    }
+    toast('Inventory sync recorded');
+    syncRowsFromState();
+  });
+</script>

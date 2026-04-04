@@ -6,6 +6,7 @@ interface Props {
   type?: 'button' | 'submit';
   class?: string;
   disabled?: boolean;
+  id?: string;
 }
 
 const {
@@ -15,6 +16,7 @@ const {
   type = 'button',
   class: className = '',
   disabled = false,
+  id,
 } = Astro.props;
 
 const base =
@@ -40,11 +42,11 @@ const classes = `${base} ${variants[variant]} ${sizes[size]} ${className}`;
 
 {
   href ? (
-    <a href={href} class={classes}>
+    <a href={href} id={id} class={classes}>
       <slot />
     </a>
   ) : (
-    <button type={type} class={classes} disabled={disabled}>
+    <button type={type} id={id} class={classes} disabled={disabled}>
       <slot />
     </button>
   )

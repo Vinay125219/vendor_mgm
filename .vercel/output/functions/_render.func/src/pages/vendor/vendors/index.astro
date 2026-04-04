@@ -1,0 +1,59 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiTable from '@/components/ui/UiTable.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import TableFilter from '@/components/islands/TableFilter.astro';
+import { mockVendors } from '@/services/mock-store';
+import { formatDate } from '@/lib/format';
+---
+
+<VendorShell title="Vendors">
+  <PageHeader
+    title="Vendor directory"
+    description="Lifecycle states, risk posture, and KYC — optimized for approvals and finance reviews."
+  >
+    <UiButton href="/vendor/onboarding" variant="primary" slot="actions">Start onboarding</UiButton>
+  </PageHeader>
+
+  <TableFilter placeholder="Search vendors, email, GSTIN…" />
+  <UiTable>
+    <thead class="border-b border-vs-border bg-vs-elevated/80 text-xs uppercase tracking-wide text-vs-muted">
+      <tr>
+        <th class="px-4 py-3 font-semibold">Business</th>
+        <th class="px-4 py-3 font-semibold">Contact</th>
+        <th class="px-4 py-3 font-semibold">State</th>
+        <th class="px-4 py-3 font-semibold">KYC</th>
+        <th class="px-4 py-3 font-semibold">Risk</th>
+        <th class="px-4 py-3 font-semibold">Updated</th>
+      </tr>
+    </thead>
+    <tbody data-vs-table>
+      {
+        mockVendors.map((v) => (
+          <tr class="border-b border-vs-border/80 hover:bg-vs-elevated/40">
+            <td class="px-4 py-3">
+              <p class="font-medium text-vs-fg">{v.businessName}</p>
+              <p class="text-xs text-vs-muted">{v.legalName}</p>
+            </td>
+            <td class="px-4 py-3 text-sm text-vs-muted">
+              <p>{v.contactName}</p>
+              <p class="font-mono text-xs">{v.email}</p>
+            </td>
+            <td class="px-4 py-3">
+              <UiBadge variant={v.state}>{v.state.replace('_', ' ')}</UiBadge>
+            </td>
+            <td class="px-4 py-3">
+              <UiBadge variant="neutral">{v.kycStatus.replace('_', ' ')}</UiBadge>
+            </td>
+            <td class="px-4 py-3 text-sm tabular-nums text-vs-fg">{v.riskScore ?? '—'}</td>
+            <td class="px-4 py-3 text-xs text-vs-muted">
+              {v.verifiedAt ? formatDate(v.verifiedAt) : v.submittedAt ? formatDate(v.submittedAt) : '—'}
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </UiTable>
+</VendorShell>

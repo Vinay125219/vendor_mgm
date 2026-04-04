@@ -1,0 +1,98 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiTable from '@/components/ui/UiTable.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiAlert from '@/components/ui/UiAlert.astro';
+import TableFilter from '@/components/islands/TableFilter.astro';
+import { mockPayments, mockWebhookLog } from '@/services/mock-store';
+import { formatINRFromPaise } from '@/lib/format';
+import { getRazorpayKeyId } from '@/lib/razorpay/config';
+
+function payVariant(s: string) {
+  if (s === 'captured' || s === 'authorized') return 'success';
+  if (s === 'failed') return 'danger';
+  if (s === 'refunded' || s === 'disputed') return 'warning';
+  return 'neutral';
+}
+
+const keyId = getRazorpayKeyId();
+---
+
+<VendorShell title="Payments">
+  <PageHeader
+    title="Payments"
+    description="Razorpay order → payment mapping — verification and webhooks would run on your API in production."
+  >
+    <UiButton href="#checkout-stub" variant="primary" slot="actions">Test checkout (stub)</UiButton>
+  </PageHeader>
+
+  <UiAlert variant="info" title="Production verification">
+    Never trust client-only success callbacks. Use a server <code class="font-mono text-xs">payments/verify</code> endpoint and
+    webhooks for authoritative state.
+  </UiAlert>
+
+  <div class="mt-6 grid gap-4 lg:grid-cols-3">
+    <UiCard padding="md" class="lg:col-span-2">
+      <h2 class="text-sm font-semibold text-vs-fg">Public key (mock)</h2>
+      <p class="mt-2 font-mono text-xs text-vs-muted break-all">{keyId}</p>
+    </UiCard>
+    <UiCard padding="md">
+      <h2 class="text-sm font-semibold text-vs-fg">Latest webhook</h2>
+      <p class="mt-2 text-xs text-vs-muted">
+        {mockWebhookLog[0]?.event} · {mockWebhookLog[0]?.verified ? 'verified' : 'pending'}
+      </p>
+    </UiCard>
+  </div>
+
+  <h2 class="mt-10 text-base font-semibold" id="checkout-stub">
+    Checkout stub (client)
+  </h2>
+  <p class="text-sm text-vs-muted">
+    Loads Razorpay Checkout script when you wire real keys; below is a safe placeholder CTA.
+  </p>
+  <div class="mt-4 flex flex-wrap gap-2">
+    <UiButton variant="secondary" id="vs-razorpay-open">Open Checkout (mock)</UiButton>
+  </div>
+
+  <h2 class="mt-10 text-base font-semibold">Transactions</h2>
+  <TableFilter placeholder="Search order, payment id…" />
+  <UiTable class="mt-4">
+    <thead class="border-b border-vs-border bg-vs-elevated/80 text-xs uppercase tracking-wide text-vs-muted">
+      <tr>
+        <th class="px-4 py-3 font-semibold">Payment</th>
+        <th class="px-4 py-3 font-semibold">Order</th>
+        <th class="px-4 py-3 font-semibold">Amount</th>
+        <th class="px-4 py-3 font-semibold">Status</th>
+        <th class="px-4 py-3 font-semibold">Updated</th>
+      </tr>
+    </thead>
+    <tbody data-vs-table>
+      {
+        mockPayments.map((p) => (
+          <tr class="border-b border-vs-border/80">
+            <td class="px-4 py-3 font-mono text-xs">{p.razorpayPaymentId ?? p.id}</td>
+            <td class="px-4 py-3 font-mono text-xs">{p.orderId}</td>
+            <td class="px-4 py-3 tabular-nums">{formatINRFromPaise(p.amountPaise)}</td>
+            <td class="px-4 py-3">
+              <UiBadge variant={payVariant(p.status)}>{p.status}</UiBadge>
+            </td>
+            <td class="px-4 py-3 text-xs text-vs-muted">{p.updatedAt}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </UiTable>
+</VendorShell>
+
+<script>
+  document.getElementById('vs-razorpay-open')?.addEventListener('click', () => {
+    window.dispatchEvent(
+      new CustomEvent('vs:toast', {
+        detail: { message: 'Razorpay Checkout: integrate script + order_id from your backend', level: 'info' },
+      }),
+    );
+  });
+</script>

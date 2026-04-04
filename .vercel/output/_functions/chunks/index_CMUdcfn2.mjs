@@ -1,0 +1,46 @@
+import { c as createComponent } from './astro-component_BR9_Owca.mjs';
+import 'piccolore';
+import { m as maybeRenderHead, h as addAttribute, o as renderSlot, r as renderTemplate, n as renderComponent } from './entrypoint_B9G27Yxt.mjs';
+import { r as renderScript } from './constants_CmOIQZgW.mjs';
+import { $ as $$VendorShell, a as $$PageHeader } from './PageHeader_CvItCAHT.mjs';
+import { $ as $$UiCard } from './UiCard_C97yNYVB.mjs';
+import { $ as $$UiBadge } from './UiBadge_DVyRGpab.mjs';
+import { $ as $$UiAlert } from './UiAlert_8_hbgA1F.mjs';
+import 'clsx';
+
+const $$UiTabs = createComponent(($$result, $$props, $$slots) => {
+  const Astro2 = $$result.createAstro($$props, $$slots);
+  Astro2.self = $$UiTabs;
+  const { labels, class: className = "" } = Astro2.props;
+  const [l1, l2] = labels;
+  const groupId = `tabs_${Math.random().toString(36).slice(2, 9)}`;
+  return renderTemplate`${maybeRenderHead()}<div${addAttribute(["flex flex-col gap-4", className], "class:list")}${addAttribute(groupId, "data-vs-tabs")}> <div role="tablist" aria-label="Section tabs" class="flex flex-wrap gap-1 rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-elevated/50 p-1"> <button type="button" role="tab"${addAttribute(`${groupId}_a_tab`, "id")} aria-selected="true"${addAttribute(`${groupId}_a_panel`, "aria-controls")} tabindex="0" data-vs-tab="a" data-active="true" class="rounded-[var(--radius-vs-sm)] px-3 py-1.5 text-sm font-medium text-vs-muted transition data-[active=true]:bg-vs-surface data-[active=true]:text-vs-fg data-[active=true]:shadow-[var(--shadow-vs-sm)]"> ${l1} </button> <button type="button" role="tab"${addAttribute(`${groupId}_b_tab`, "id")} aria-selected="false"${addAttribute(`${groupId}_b_panel`, "aria-controls")} tabindex="-1" data-vs-tab="b" data-active="false" class="rounded-[var(--radius-vs-sm)] px-3 py-1.5 text-sm font-medium text-vs-muted transition data-[active=true]:bg-vs-surface data-[active=true]:text-vs-fg data-[active=true]:shadow-[var(--shadow-vs-sm)]"> ${l2} </button> </div> <div role="tabpanel"${addAttribute(`${groupId}_a_panel`, "id")}${addAttribute(`${groupId}_a_tab`, "aria-labelledby")} tabindex="0" data-vs-panel="a" class="rounded-[var(--radius-vs)] border border-vs-border/60 bg-vs-surface/60 p-4 outline-none focus-visible:ring-2 focus-visible:ring-vs-accent/40"> ${renderSlot($$result, $$slots["panel-a"])} </div> <div role="tabpanel"${addAttribute(`${groupId}_b_panel`, "id")}${addAttribute(`${groupId}_b_tab`, "aria-labelledby")} tabindex="0" hidden data-vs-panel="b" class="rounded-[var(--radius-vs)] border border-vs-border/60 bg-vs-surface/60 p-4 outline-none focus-visible:ring-2 focus-visible:ring-vs-accent/40"> ${renderSlot($$result, $$slots["panel-b"])} </div> </div> ${renderScript($$result, "C:/Users/Vinay/Desktop/vendor/src/components/islands/UiTabs.astro?astro&type=script&index=0&lang.ts")}`;
+}, "C:/Users/Vinay/Desktop/vendor/src/components/islands/UiTabs.astro", void 0);
+
+const $$Index = createComponent(async ($$result, $$props, $$slots) => {
+  const steps = [
+    { id: 1, title: "Business details", desc: "Legal entity, display name, GSTIN" },
+    { id: 2, title: "Contact", desc: "Primary ops + escalation contacts" },
+    { id: 3, title: "Tax & banking", desc: "PAN, IFSC, settlement account" },
+    { id: 4, title: "Documents", desc: "Certificates, cancelled cheque, address proof" },
+    { id: 5, title: "Verification", desc: "Automated + analyst review" },
+    { id: 6, title: "Submit", desc: "Checklist + handoff to catalog" }
+  ];
+  return renderTemplate`${renderComponent($$result, "VendorShell", $$VendorShell, { "title": "Onboarding" }, { "default": async ($$result2) => renderTemplate` ${maybeRenderHead()}<div> ${renderComponent($$result2, "PageHeader", $$PageHeader, { "title": "Vendor onboarding", "description": "Complete your business profile and submit documents for verification." })} <div class="mt-4 flex flex-wrap gap-2"> <button id="vs-save-draft" class="inline-flex items-center justify-center rounded-[var(--radius-vs-sm)] bg-vs-elevated px-4 py-2.5 text-sm font-semibold text-vs-fg shadow-[var(--shadow-vs-sm)] hover:brightness-110 border border-vs-border">Save draft</button> <button id="vs-submit-btn" type="button" class="inline-flex items-center justify-center rounded-[var(--radius-vs-sm)] bg-vs-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-vs-sm)] hover:brightness-110">Submit for review</button> </div> </div> ${renderComponent($$result2, "UiAlert", $$UiAlert, { "variant": "info", "title": "Backend Integration" }, { "default": async ($$result3) => renderTemplate`
+Draft data can be saved locally. On submit, the form POSTs to <code class="font-mono text-xs">/api/v1/vendors</code> with validation.
+` })} <div id="vs-onboard-error" class="mt-4 hidden rounded-[var(--radius-vs-sm)] border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-800 dark:text-red-200"></div> <div class="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]"> ${renderComponent($$result2, "UiCard", $$UiCard, { "padding": "md", "class": "h-fit" }, { "default": async ($$result3) => renderTemplate` <h2 class="text-sm font-semibold text-vs-fg">Progress</h2> <ol class="mt-4 space-y-3"> ${steps.map((s) => renderTemplate`<li class="flex gap-3 text-sm"> <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-vs-accent-soft text-xs font-bold text-vs-accent"> ${s.id} </span> <div> <p class="font-medium text-vs-fg">${s.title}</p> <p class="text-xs text-vs-muted">${s.desc}</p> </div> </li>`)} </ol> ` })} ${renderComponent($$result2, "UiTabs", $$UiTabs, { "class": "min-w-0", "labels": ["Business profile", "Documents"] }, { "panel-a": async ($$result3) => renderTemplate`${renderComponent($$result3, "UiCard", $$UiCard, { "padding": "lg", "slot": "panel-a" }, { "default": async ($$result4) => renderTemplate` <div class="flex flex-wrap items-center justify-between gap-3"> <h2 class="text-lg font-semibold text-vs-fg">Business details</h2> ${renderComponent($$result4, "UiBadge", $$UiBadge, { "variant": "pending" }, { "default": async ($$result5) => renderTemplate`Draft` })} </div> <form class="mt-6 grid gap-4 sm:grid-cols-2" id="vs-onboard-form"> <label class="flex flex-col gap-1 text-sm sm:col-span-2"> <span class="text-vs-muted">Business name *</span> <input name="businessName" required placeholder="Your business name" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"> </label> <label class="flex flex-col gap-1 text-sm"> <span class="text-vs-muted">Legal name *</span> <input name="legalName" required placeholder="Registered legal name" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"> </label> <label class="flex flex-col gap-1 text-sm"> <span class="text-vs-muted">GSTIN</span> <input name="gstin" placeholder="29AABCU9603R1ZV" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg font-mono"> </label> <label class="flex flex-col gap-1 text-sm"> <span class="text-vs-muted">PAN</span> <input name="pan" placeholder="AABCU9603R" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg font-mono"> </label> <label class="flex flex-col gap-1 text-sm"> <span class="text-vs-muted">Contact name *</span> <input name="contactName" required placeholder="Primary contact person" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"> </label> <label class="flex flex-col gap-1 text-sm"> <span class="text-vs-muted">Email *</span> <input name="email" type="email" required placeholder="contact@business.com" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"> </label> <label class="flex flex-col gap-1 text-sm sm:col-span-2"> <span class="text-vs-muted">Phone *</span> <input name="phone" type="tel" required placeholder="+91 98765 43210" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"> </label> </form> ` })}`, "panel-b": async ($$result3) => renderTemplate`${renderComponent($$result3, "UiCard", $$UiCard, { "padding": "lg", "slot": "panel-b" }, { "default": async ($$result4) => renderTemplate` <h2 class="text-lg font-semibold text-vs-fg">Documents</h2> <p class="mt-1 text-sm text-vs-muted">Upload business documents for verification (planned feature).</p> <div class="mt-4 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-[var(--radius-vs)] border border-dashed border-vs-border bg-vs-elevated/40 p-6 text-center text-sm text-vs-muted"> <p>Drop files or <span class="text-vs-accent">browse</span></p> <p class="mt-2 text-xs">PDF, PNG · max 10MB each</p> </div> ` })}` })} </div> ` })} ${renderScript($$result, "C:/Users/Vinay/Desktop/vendor/src/pages/vendor/onboarding/index.astro?astro&type=script&index=0&lang.ts")}`;
+}, "C:/Users/Vinay/Desktop/vendor/src/pages/vendor/onboarding/index.astro", void 0);
+
+const $$file = "C:/Users/Vinay/Desktop/vendor/src/pages/vendor/onboarding/index.astro";
+const $$url = "/vendor/onboarding";
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: $$Index,
+  file: $$file,
+  url: $$url
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

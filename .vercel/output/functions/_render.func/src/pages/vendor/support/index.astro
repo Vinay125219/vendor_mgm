@@ -1,0 +1,158 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import EmptyState from '@/components/ui/EmptyState.astro';
+import { mockTickets, mockVendors } from '@/services/mock-store';
+import { formatDate } from '@/lib/format';
+
+function vendorName(id: string) {
+  return mockVendors.find((v) => v.id === id)?.businessName ?? id;
+}
+---
+
+<VendorShell title="Support">
+  <PageHeader title="Support desk" description="New tickets are stored in your browser and appear in the list below immediately." />
+
+  <UiCard class="mb-8" padding="lg">
+    <h2 class="text-base font-semibold text-vs-fg">Create ticket</h2>
+    <form id="vs-ticket-form" class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+      <label class="flex min-w-0 flex-1 flex-col gap-1 text-sm">
+        <span class="text-vs-muted">Vendor</span>
+        <select
+          name="vendorId"
+          class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2"
+        >
+          {mockVendors.map((v) => <option value={v.id}>{v.businessName}</option>)}
+        </select>
+      </label>
+      <label class="flex min-w-0 flex-[2] flex-col gap-1 text-sm">
+        <span class="text-vs-muted">Subject</span>
+        <input
+          name="subject"
+          required
+          class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2"
+          placeholder="What do you need help with?"
+        />
+      </label>
+      <button
+        type="submit"
+        class="rounded-[var(--radius-vs-sm)] bg-vs-accent px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110"
+      >
+        Submit
+      </button>
+    </form>
+    <p id="vs-ticket-err" class="mt-2 hidden text-sm text-red-600 dark:text-red-400"></p>
+  </UiCard>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <UiCard class="lg:col-span-2" padding="lg">
+      <h2 class="text-base font-semibold">Open tickets</h2>
+      <ul class="mt-4 divide-y divide-vs-border/80" id="vs-ticket-list">
+        {
+          mockTickets.map((t) => (
+            <li class="flex flex-wrap items-center justify-between gap-3 py-4">
+              <div>
+                <p class="font-medium text-vs-fg">{t.subject}</p>
+                <p class="text-xs text-vs-muted">{vendorName(t.vendorId)}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <UiBadge variant="neutral">{t.priority}</UiBadge>
+                <UiBadge variant="warning">{t.status}</UiBadge>
+                <span class="text-xs text-vs-muted">{formatDate(t.updatedAt)}</span>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </UiCard>
+    <UiCard padding="lg">
+      <h2 class="text-base font-semibold">Helpful links</h2>
+      <ul class="mt-4 space-y-2 text-sm text-vs-accent">
+        <li>
+          <a href="/vendor/onboarding" class="hover:underline">Onboarding guide</a>
+        </li>
+        <li>
+          <a href="/vendor/payments" class="hover:underline">Payments & webhooks</a>
+        </li>
+        <li>
+          <a href="/vendor/reports" class="hover:underline">Operational reports</a>
+        </li>
+      </ul>
+    </UiCard>
+  </div>
+
+  <div class="mt-8">
+    <EmptyState title="No SLA breaches" description="When monitors fire, they will surface here with owner assignment.">
+      <svg
+        slot="icon"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.75"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    </EmptyState>
+  </div>
+</VendorShell>
+
+<script>
+  import { createSupportTicket, loadState } from '@/lib/client-store';
+  import { formatDate } from '@/lib/format';
+  import { mockVendors } from '@/services/mock-store';
+
+  function vName(id: string) {
+    return mockVendors.find((v) => v.id === id)?.businessName ?? id;
+  }
+
+  function renderTickets() {
+    const ul = document.getElementById('vs-ticket-list');
+    if (!ul) return;
+    const tickets = loadState().tickets;
+    ul.innerHTML = tickets
+      .map(
+        (t) => `
+      <li class="flex flex-wrap items-center justify-between gap-3 py-4">
+        <div>
+          <p class="font-medium text-vs-fg">${t.subject.replace(/</g, '&lt;')}</p>
+          <p class="text-xs text-vs-muted">${vName(t.vendorId)}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center rounded-full bg-vs-elevated px-2 py-0.5 text-[11px] font-medium uppercase text-vs-muted">${t.priority}</span>
+          <span class="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium uppercase text-amber-800 dark:text-amber-200">${t.status}</span>
+          <span class="text-xs text-vs-muted">${formatDate(t.updatedAt)}</span>
+        </div>
+      </li>`,
+      )
+      .join('');
+  }
+  renderTickets();
+
+  document.getElementById('vs-ticket-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    const err = document.getElementById('vs-ticket-err');
+    err?.classList.add('hidden');
+    const fd = new FormData(form);
+    const t = createSupportTicket(String(fd.get('subject') || ''), String(fd.get('vendorId') || ''));
+    if (!t) {
+      if (err) {
+        err.textContent = 'Subject required';
+        err.classList.remove('hidden');
+      }
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('vs:toast', { detail: { message: 'Ticket created', level: 'success' } }));
+    renderTickets();
+    form.reset();
+  });
+</script>

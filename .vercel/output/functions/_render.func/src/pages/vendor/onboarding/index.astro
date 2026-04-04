@@ -1,0 +1,231 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiAlert from '@/components/ui/UiAlert.astro';
+import UiTabs from '@/components/islands/UiTabs.astro';
+const draft: Record<string, string> = {};
+
+const steps = [
+  { id: 1, title: 'Business details', desc: 'Legal entity, display name, GSTIN' },
+  { id: 2, title: 'Contact', desc: 'Primary ops + escalation contacts' },
+  { id: 3, title: 'Tax & banking', desc: 'PAN, IFSC, settlement account' },
+  { id: 4, title: 'Documents', desc: 'Certificates, cancelled cheque, address proof' },
+  { id: 5, title: 'Verification', desc: 'Automated + analyst review' },
+  { id: 6, title: 'Submit', desc: 'Checklist + handoff to catalog' },
+];
+---
+
+<VendorShell title="Onboarding">
+  <div>
+    <PageHeader
+      title="Vendor onboarding"
+      description="Complete your business profile and submit documents for verification."
+    />
+    <div class="mt-4 flex flex-wrap gap-2">
+      <button id="vs-save-draft" class="inline-flex items-center justify-center rounded-[var(--radius-vs-sm)] bg-vs-elevated px-4 py-2.5 text-sm font-semibold text-vs-fg shadow-[var(--shadow-vs-sm)] hover:brightness-110 border border-vs-border">Save draft</button>
+      <button id="vs-submit-btn" type="button" class="inline-flex items-center justify-center rounded-[var(--radius-vs-sm)] bg-vs-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-vs-sm)] hover:brightness-110">Submit for review</button>
+    </div>
+  </div>
+
+  <UiAlert variant="info" title="Backend Integration">
+    Draft data can be saved locally. On submit, the form POSTs to <code class="font-mono text-xs">/api/v1/vendors</code> with validation.
+  </UiAlert>
+
+  <div id="vs-onboard-error" class="mt-4 hidden rounded-[var(--radius-vs-sm)] border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-800 dark:text-red-200"></div>
+
+  <div class="mt-8 grid gap-6 lg:grid-cols-[280px_1fr]">
+    <UiCard padding="md" class="h-fit">
+      <h2 class="text-sm font-semibold text-vs-fg">Progress</h2>
+      <ol class="mt-4 space-y-3">
+        {
+          steps.map((s) => (
+            <li class="flex gap-3 text-sm">
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-vs-accent-soft text-xs font-bold text-vs-accent">
+                {s.id}
+              </span>
+              <div>
+                <p class="font-medium text-vs-fg">{s.title}</p>
+                <p class="text-xs text-vs-muted">{s.desc}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </UiCard>
+
+    <UiTabs class="min-w-0" labels={['Business profile', 'Documents']}>
+      <UiCard padding="lg" slot="panel-a">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-vs-fg">Business details</h2>
+          <UiBadge variant="pending">Draft</UiBadge>
+        </div>
+        <form class="mt-6 grid gap-4 sm:grid-cols-2" id="vs-onboard-form">
+          <label class="flex flex-col gap-1 text-sm sm:col-span-2">
+            <span class="text-vs-muted">Business name *</span>
+            <input
+              name="businessName"
+              required
+              placeholder="Your business name"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-sm">
+            <span class="text-vs-muted">Legal name *</span>
+            <input
+              name="legalName"
+              required
+              placeholder="Registered legal name"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-sm">
+            <span class="text-vs-muted">GSTIN</span>
+            <input
+              name="gstin"
+              placeholder="29AABCU9603R1ZV"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg font-mono"
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-sm">
+            <span class="text-vs-muted">PAN</span>
+            <input
+              name="pan"
+              placeholder="AABCU9603R"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg font-mono"
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-sm">
+            <span class="text-vs-muted">Contact name *</span>
+            <input
+              name="contactName"
+              required
+              placeholder="Primary contact person"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-sm">
+            <span class="text-vs-muted">Email *</span>
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="contact@business.com"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"
+            />
+          </label>
+          <label class="flex flex-col gap-1 text-sm sm:col-span-2">
+            <span class="text-vs-muted">Phone *</span>
+            <input
+              name="phone"
+              type="tel"
+              required
+              placeholder="+91 98765 43210"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 text-vs-fg"
+            />
+          </label>
+        </form>
+      </UiCard>
+
+      <UiCard padding="lg" slot="panel-b">
+        <h2 class="text-lg font-semibold text-vs-fg">Documents</h2>
+        <p class="mt-1 text-sm text-vs-muted">Upload business documents for verification (planned feature).</p>
+        <div
+          class="mt-4 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-[var(--radius-vs)] border border-dashed border-vs-border bg-vs-elevated/40 p-6 text-center text-sm text-vs-muted"
+        >
+          <p>Drop files or <span class="text-vs-accent">browse</span></p>
+          <p class="mt-2 text-xs">PDF, PNG · max 10MB each</p>
+        </div>
+      </UiCard>
+    </UiTabs>
+  </div>
+</VendorShell>
+
+<script>
+  import { vendorService, getErrorMessage } from '@/services/backend.service';
+
+  const form = document.getElementById('vs-onboard-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('vs-submit-btn') as HTMLButtonElement;
+  const errEl = document.getElementById('vs-onboard-error');
+  const draftBtn = document.getElementById('vs-save-draft') as HTMLElement;
+
+  // Load draft from localStorage
+  function loadDraft() {
+    try {
+      const draftKey = 'vs_onboarding_draft';
+      const saved = localStorage.getItem(draftKey);
+      if (saved) {
+        const data = JSON.parse(saved) as Record<string, string>;
+        for (const [key, value] of Object.entries(data)) {
+          const input = form.querySelector(`[name="${key}"]`) as HTMLInputElement | null;
+          if (input) input.value = value;
+        }
+      }
+    } catch {
+      console.warn('Failed to load draft');
+    }
+  }
+  loadDraft();
+
+  // Create save draft button handler
+  const saveDraftBtn = document.getElementById('vs-save-draft');
+  saveDraftBtn?.addEventListener('click', () => {
+    try {
+      const draftKey = 'vs_onboarding_draft';
+      const fd = new FormData(form);
+      const data = Object.fromEntries(fd.entries());
+      localStorage.setItem(draftKey, JSON.stringify(data));
+      window.dispatchEvent(new CustomEvent('vs:toast', { detail: { message: 'Draft saved locally', level: 'success' } }));
+    } catch (error) {
+      window.dispatchEvent(new CustomEvent('vs:toast', { detail: { message: 'Failed to save draft', level: 'error' } }));
+    }
+  });
+
+  // Create submit button handler
+  submitBtn?.addEventListener('click', (e) => {
+    form?.dispatchEvent(new Event('submit', { bubbles: true }));
+  });
+
+  // Submit form
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errEl?.classList.add('hidden');
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Submitting...';
+
+    try {
+      const fd = new FormData(form);
+      const data = {
+        businessName: String(fd.get('businessName') || '').trim(),
+        legalName: String(fd.get('legalName') || '').trim(),
+        contactName: String(fd.get('contactName') || '').trim(),
+        email: String(fd.get('email') || '').trim(),
+        phone: String(fd.get('phone') || '').trim(),
+        gstin: String(fd.get('gstin') || '').trim() || undefined,
+        pan: String(fd.get('pan') || '').trim() || undefined,
+      };
+
+      // Validate required fields
+      if (!data.businessName || !data.legalName || !data.contactName || !data.email || !data.phone) {
+        throw new Error('All required fields must be filled');
+      }
+
+      await vendorService.createVendor(data);
+      localStorage.removeItem('vs_onboarding_draft');
+      window.dispatchEvent(new CustomEvent('vs:toast', { detail: { message: 'Vendor onboarding submitted successfully', level: 'success' } }));
+      window.location.href = '/vendor';
+    } catch (error) {
+      if (errEl) {
+        errEl.textContent = getErrorMessage(error);
+        errEl.classList.remove('hidden');
+      }
+      console.error('Submission error:', error);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+</script>

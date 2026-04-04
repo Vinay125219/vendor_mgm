@@ -1,0 +1,117 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+---
+
+<VendorShell title="New product">
+  <PageHeader title="Create product" description="Submit new products for catalog review and approval." />
+  <UiCard padding="lg">
+    <div id="vs-product-err" class="mb-4 hidden rounded-[var(--radius-vs-sm)] border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-800 dark:text-red-200"></div>
+    <form id="vs-product-form" class="grid gap-4 sm:grid-cols-2">
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2">
+        <span class="text-vs-muted">Title *</span>
+        <input
+          name="title"
+          required
+          placeholder="Product name"
+          class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        <span class="text-vs-muted">SKU *</span>
+        <input name="sku" required placeholder="SKU-001" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2 font-mono" />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        <span class="text-vs-muted">Base price (INR) *</span>
+        <input name="priceInr" type="number" min="0" step="0.01" required placeholder="0.00" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2" />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        <span class="text-vs-muted">Stock</span>
+        <input name="stock" type="number" min="0" step="1" value="0" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2" />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        <span class="text-vs-muted">Category *</span>
+        <select name="categoryId" required class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2">
+          <option value="">Select category</option>
+          <option value="cat_beverages">Beverages</option>
+          <option value="cat_home">Home</option>
+          <option value="cat_snacks">Snacks</option>
+        </select>
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        <span class="text-vs-muted">Tags (comma separated)</span>
+        <input name="tags" placeholder="organic, bestseller" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2" />
+      </label>
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2">
+        <span class="text-vs-muted">Description</span>
+        <textarea name="description" rows={4} placeholder="Product details..." class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2"></textarea>
+      </label>
+      <div class="flex flex-wrap gap-2 sm:col-span-2">
+        <button
+          type="submit"
+          id="vs-product-submit"
+          class="inline-flex items-center justify-center rounded-[var(--radius-vs-sm)] bg-vs-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-vs-sm)] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Submit for review
+        </button>
+        <UiButton href="/vendor/products" variant="secondary">Cancel</UiButton>
+      </div>
+    </form>
+  </UiCard>
+</VendorShell>
+
+<script>
+  import { productService, getErrorMessage } from '@/services/backend.service';
+
+  const form = document.getElementById('vs-product-form') as HTMLFormElement;
+  const errEl = document.getElementById('vs-product-err');
+  const submitBtn = document.getElementById('vs-product-submit') as HTMLButtonElement;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errEl?.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    try {
+      const fd = new FormData(form);
+      const tagsStr = String(fd.get('tags') || '');
+      const priceInr = Number(fd.get('priceInr'));
+      const pricePaise = Math.round(priceInr * 100);
+
+      const data = {
+        title: String(fd.get('title') || '').trim(),
+        sku: String(fd.get('sku') || '').trim().toUpperCase(),
+        categoryId: String(fd.get('categoryId') || ''),
+        basePricePaise: pricePaise,
+        stock: Number(fd.get('stock')) || 0,
+        description: String(fd.get('description') || '').trim(),
+        tagIds: tagsStr
+          .split(',')
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean),
+      };
+
+      // Validate required fields
+      if (!data.title || !data.sku || !data.categoryId || pricePaise <= 0) {
+        throw new Error('Title, SKU, category, and price are required');
+      }
+
+      await productService.createProduct(data);
+
+      window.dispatchEvent(new CustomEvent('vs:toast', { detail: { message: 'Product created successfully', level: 'success' } }));
+      window.location.href = '/vendor/products';
+    } catch (error) {
+      if (errEl) {
+        errEl.textContent = getErrorMessage(error);
+        errEl.classList.remove('hidden');
+      }
+      console.error('Product creation error:', error);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit for review';
+    }
+  });
+</script>

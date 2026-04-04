@@ -1,0 +1,98 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import UiAlert from '@/components/ui/UiAlert.astro';
+import UiTable from '@/components/ui/UiTable.astro';
+import { listAudit } from '@/lib/client-store';
+import { formatDate } from '@/lib/format';
+
+const audit = listAudit(20);
+---
+
+<VendorShell title="Settings">
+  <PageHeader
+    title="Settings & audit"
+    description="Tenant-ready controls: SSO hooks, webhooks, API keys, and immutable audit for critical actions."
+  />
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <UiCard padding="lg">
+      <h2 class="text-base font-semibold">Authentication (stub)</h2>
+      <p class="mt-2 text-sm text-vs-muted">
+        Map to your IdP (OIDC/SAML). Roles: Super Admin, Admin, Finance, Support, Vendor.
+      </p>
+      <div class="mt-4 space-y-3 text-sm">
+        <label class="flex flex-col gap-1">
+          <span class="text-vs-muted">SSO issuer URL</span>
+          <input class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2" placeholder="https://idp.example" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-vs-muted">Webhook signing secret</span>
+          <input type="password" class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2" />
+        </label>
+      </div>
+      <UiButton class="mt-4" variant="primary">
+        Save
+      </UiButton>
+    </UiCard>
+    <UiCard padding="lg">
+      <h2 class="text-base font-semibold">API</h2>
+      <UiAlert variant="warning" title="Static demo">
+        This build has no backend. In production, target your own <code class="font-mono text-xs">/api/v1/*</code> from the parent
+        storefront.
+      </UiAlert>
+      <p class="mt-4 text-sm text-vs-muted">
+        Rotate keys from your secrets manager; never commit live Razorpay credentials.
+      </p>
+    </UiCard>
+  </div>
+
+  <UiCard class="mt-8" padding="md">
+    <h2 class="text-base font-semibold">Recent audit log</h2>
+    <UiTable class="mt-4">
+      <thead class="border-b border-vs-border bg-vs-elevated/80 text-xs uppercase text-vs-muted">
+        <tr>
+          <th class="px-4 py-3 text-left font-semibold">When</th>
+          <th class="px-4 py-3 text-left font-semibold">Actor</th>
+          <th class="px-4 py-3 text-left font-semibold">Action</th>
+          <th class="px-4 py-3 text-left font-semibold">Resource</th>
+        </tr>
+      </thead>
+      <tbody id="vs-audit-tbody">
+        {
+          audit.map((a) => (
+            <tr class="border-b border-vs-border/60 text-sm">
+              <td class="px-4 py-2 text-vs-muted">{formatDate(a.at)}</td>
+              <td class="px-4 py-2 font-mono text-xs">{a.actorId}</td>
+              <td class="px-4 py-2">{a.action}</td>
+              <td class="px-4 py-2 font-mono text-xs">
+                {a.resource}
+                {a.resourceId ? `:${a.resourceId}` : ''}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </UiTable>
+  </UiCard>
+</VendorShell>
+
+<script>
+  import { listAudit } from '@/lib/client-store';
+  import { formatDate } from '@/lib/format';
+
+  function renderAudit() {
+    const tb = document.getElementById('vs-audit-tbody');
+    if (!tb) return;
+    const rows = listAudit(20);
+    tb.innerHTML = rows
+      .map(
+        (a) =>
+          `<tr class="border-b border-vs-border/60 text-sm"><td class="px-4 py-2 text-vs-muted">${formatDate(a.at)}</td><td class="px-4 py-2 font-mono text-xs">${a.actorId}</td><td class="px-4 py-2">${a.action}</td><td class="px-4 py-2 font-mono text-xs">${a.resource}${a.resourceId ? ':' + a.resourceId : ''}</td></tr>`,
+      )
+      .join('');
+  }
+  renderAudit();
+</script>

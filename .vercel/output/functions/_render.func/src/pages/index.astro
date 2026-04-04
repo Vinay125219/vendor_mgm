@@ -1,0 +1,20 @@
+---
+// Fully static entry: routing is decided in the browser from localStorage session.
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VendorSphere</title>
+    <script is:inline>
+      try {
+        var ok = localStorage.getItem('vs_session') === 'vs_demo_authenticated';
+        location.replace(ok ? '/vendor' : '/login');
+      } catch (_) {
+        location.replace('/login');
+      }
+    </script>
+  </head>
+  <body></body>
+</html>

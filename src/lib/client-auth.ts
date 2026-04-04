@@ -80,3 +80,12 @@ export function logout(): void {
   localStorage.removeItem(EMAIL_KEY);
   localStorage.removeItem(EXPIRES_KEY);
 }
+
+export function switchRole(newRole: string): { ok: boolean; message?: string } {
+  if (!isBrowser()) return { ok: false, message: 'Not in browser environment' };
+  if (!isUserRole(newRole)) return { ok: false, message: 'Invalid role' };
+  if (!isElevatedSession()) return { ok: false, message: 'Only super admin can switch roles' };
+  
+  localStorage.setItem(ROLE_KEY, newRole);
+  return { ok: true };
+}

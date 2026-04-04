@@ -1,0 +1,59 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiTable from '@/components/ui/UiTable.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import { mockDisputes, mockVendors } from '@/services/mock-store';
+import { formatINRFromPaise } from '@/lib/format';
+
+function vendorName(id: string) {
+  return mockVendors.find((v) => v.id === id)?.businessName ?? id;
+}
+---
+
+<VendorShell title="Disputes">
+  <PageHeader
+    title="Returns & disputes"
+    description="Tie-breakers between vendors, customers, and payments — with chargeback visibility."
+  >
+    <UiButton variant="primary" slot="actions">New case</UiButton>
+  </PageHeader>
+
+  <UiTable>
+    <thead class="border-b border-vs-border bg-vs-elevated/80 text-xs uppercase tracking-wide text-vs-muted">
+      <tr>
+        <th class="px-4 py-3 font-semibold">Case</th>
+        <th class="px-4 py-3 font-semibold">Order</th>
+        <th class="px-4 py-3 font-semibold">Vendor</th>
+        <th class="px-4 py-3 font-semibold">Type</th>
+        <th class="px-4 py-3 font-semibold">Amount</th>
+        <th class="px-4 py-3 font-semibold">Status</th>
+        <th class="px-4 py-3 font-semibold"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        mockDisputes.map((d) => (
+          <tr class="border-b border-vs-border/80">
+            <td class="px-4 py-3 font-mono text-sm">{d.id}</td>
+            <td class="px-4 py-3 font-mono text-xs">{d.orderId}</td>
+            <td class="px-4 py-3 text-sm">{vendorName(d.vendorId)}</td>
+            <td class="px-4 py-3">
+              <UiBadge variant="neutral">{d.type}</UiBadge>
+            </td>
+            <td class="px-4 py-3 tabular-nums">{formatINRFromPaise(d.amountPaise)}</td>
+            <td class="px-4 py-3">
+              <UiBadge variant="warning">{d.status.replace('_', ' ')}</UiBadge>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <UiButton variant="ghost" size="sm">
+                Review
+              </UiButton>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </UiTable>
+</VendorShell>
