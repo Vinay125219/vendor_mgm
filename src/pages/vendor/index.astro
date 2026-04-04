@@ -1,0 +1,178 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import KpiCard from '@/components/ui/KpiCard.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import ChartBlock from '@/components/islands/ChartBlock.astro';
+import {
+  getComplianceAlerts,
+  getDashboardKpis,
+  getFulfillmentTrends,
+  getPaymentStatusDistribution,
+  getRecentActivity,
+  getVendorGrowthSeries,
+} from '@/services/dashboard.service';
+import { formatDate, formatINRFromPaise } from '@/lib/format';
+
+const kpis = getDashboardKpis();
+const growth = getVendorGrowthSeries();
+const payDist = getPaymentStatusDistribution();
+const fulfill = getFulfillmentTrends();
+const activity = getRecentActivity();
+const alerts = getComplianceAlerts();
+
+const growthSpec = {
+  type: 'line' as const,
+  labels: growth.map((g) => g.date),
+  datasets: [
+    {
+      label: 'Active vendors',
+      data: growth.map((g) => g.value),
+      borderColor: 'rgb(99, 102, 241)',
+      backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    },
+  ],
+};
+
+const paySpec = {
+  type: 'doughnut' as const,
+  labels: payDist.map((p) => p.status),
+  datasets: [
+    {
+      label: 'Payments',
+      data: payDist.map((p) => p.count),
+      backgroundColor: ['#22c55e', '#eab308', '#ef4444', '#6366f1', '#94a3b8'],
+    },
+  ],
+};
+
+const fulfillSpec = {
+  type: 'bar' as const,
+  labels: fulfill.map((f) => f.date),
+  datasets: [
+    { label: 'Fulfilled', data: fulfill.map((f) => f.fulfilled), backgroundColor: 'rgba(16, 185, 129, 0.7)' },
+    { label: 'Pending', data: fulfill.map((f) => f.pending), backgroundColor: 'rgba(148, 163, 184, 0.5)' },
+  ],
+};
+---
+
+<VendorShell title="Dashboard">
+  <PageHeader
+    title="Operations overview"
+    description="Real-time signal across vendors, catalog, payments, and fulfillment — tuned for a procurement-grade workflow."
+  >
+    <UiButton href="/vendor/onboarding" variant="primary" slot="actions">New vendor</UiButton>
+    <UiButton href="/vendor/reports" variant="secondary" slot="actions">Export report</UiButton>
+  </PageHeader>
+
+  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <KpiCard label="Total vendors" value={String(kpis.totalVendors)} trend="+4 this month" trendUp />
+    <KpiCard label="Active vendors" value={String(kpis.activeVendors)} hint="KYC verified & trading" />
+    <KpiCard label="Pending approvals" value={String(kpis.pendingApprovals)} />
+    <KpiCard label="Live products" value={String(kpis.liveProducts)} />
+
+    <KpiCard label="Open disputes" value={String(kpis.openDisputes)} />
+    <KpiCard label="Completed orders" value={String(kpis.completedOrders)} trend="7d moving avg" />
+    <KpiCard label="Gross revenue" value={formatINRFromPaise(kpis.grossRevenuePaise)} hint="Captured payments" />
+    <KpiCard
+      label="Pending settlements"
+      value={formatINRFromPaise(kpis.pendingSettlementsPaise)}
+      hint="Scheduled batches"
+    />
+    <KpiCard label="Failed payments" value={String(kpis.failedPayments)} trend="Investigate in Payments" />
+  </section>
+
+  <section class="mt-10 grid gap-6 lg:grid-cols-3">
+    <UiCard class="lg:col-span-2" padding="md">
+      <div class="mb-4 flex items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-semibold text-vs-fg">Vendor growth</h2>
+          <p class="text-xs text-vs-muted">Normalized for stakeholder reviews</p>
+        </div>
+        <UiBadge variant="accent">Live mock</UiBadge>
+      </div>
+      <ChartBlock spec={growthSpec} />
+    </UiCard>
+    <UiCard padding="md">
+      <h2 class="text-base font-semibold text-vs-fg">Payment status</h2>
+      <p class="text-xs text-vs-muted">Mapped to Razorpay states</p>
+      <div class="mt-4">
+        <ChartBlock spec={paySpec} height={200} />
+      </div>
+    </UiCard>
+  </section>
+
+  <section class="mt-6 grid gap-6 lg:grid-cols-3">
+    <UiCard class="lg:col-span-2" padding="md">
+      <h2 class="text-base font-semibold text-vs-fg">Fulfillment trend</h2>
+      <p class="text-xs text-vs-muted">Packed & shipped vs backlog</p>
+      <div class="mt-4">
+        <ChartBlock spec={fulfillSpec} />
+      </div>
+    </UiCard>
+    <UiCard padding="md">
+      <h2 class="text-base font-semibold text-vs-fg">Compliance</h2>
+      <ul class="mt-4 flex flex-col gap-3">
+        {
+          alerts.map((a) => (
+            <li
+              class:list={[
+                'rounded-[var(--radius-vs-sm)] border px-3 py-2 text-sm',
+                a.level === 'critical' && 'border-red-500/40 bg-red-500/5',
+                a.level === 'warning' && 'border-amber-500/40 bg-amber-500/5',
+                a.level === 'info' && 'border-sky-500/40 bg-sky-500/5',
+              ]}
+            >
+              <p class="font-medium text-vs-fg">{a.title}</p>
+              <p class="text-xs text-vs-muted">{a.detail}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </UiCard>
+  </section>
+
+  <section class="mt-6 grid gap-6 lg:grid-cols-2">
+    <UiCard padding="md">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-base font-semibold text-vs-fg">Recent activity</h2>
+        <UiButton href="/vendor/settings" variant="ghost" size="sm">Audit</UiButton>
+      </div>
+      <ol class="space-y-4">
+        {
+          activity.map((a) => (
+            <li class="flex gap-3 text-sm">
+              <span class="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-vs-accent" aria-hidden="true" />
+              <div>
+                <p class="text-vs-fg">
+                  <span class="font-medium">{a.actor}</span>{' '}
+                  <span class="text-vs-muted">{a.action}</span>{' '}
+                  <span class="font-mono text-xs">{a.entity}</span>
+                </p>
+                <p class="text-xs text-vs-muted">{formatDate(a.at)}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </UiCard>
+    <UiCard padding="md">
+      <h2 class="text-base font-semibold text-vs-fg">Quick actions</h2>
+      <div class="mt-4 grid gap-2 sm:grid-cols-2">
+        <UiButton href="/vendor/products/new" variant="secondary">Create product</UiButton>
+        <UiButton href="/vendor/orders" variant="secondary">Review orders</UiButton>
+        <UiButton href="/vendor/payments" variant="secondary">Payment health</UiButton>
+        <UiButton href="/vendor/support" variant="secondary">Open ticket</UiButton>
+      </div>
+      <div class="mt-6 rounded-[var(--radius-vs-sm)] border border-dashed border-vs-border bg-vs-elevated/40 p-4 text-xs text-vs-muted">
+        <p class="font-semibold text-vs-fg">Integration note</p>
+        <p class="mt-2">
+          This static shell uses routes under <code class="font-mono text-vs-accent">/vendor/*</code>. Demo data and mutations live in
+          <code class="font-mono text-vs-accent">localStorage</code>; wire a real API when you embed in production.
+        </p>
+      </div>
+    </UiCard>
+  </section>
+</VendorShell>

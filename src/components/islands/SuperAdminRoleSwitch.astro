@@ -1,0 +1,46 @@
+---
+import { ROLE_LABELS } from '@/lib/rbac';
+import type { UserRole } from '@/types';
+
+const roles = (Object.keys(ROLE_LABELS) as UserRole[]).map((id) => ({ id, label: ROLE_LABELS[id] }));
+---
+
+<div class="flex items-center gap-2">
+  <label for="vs-sa-role" class="sr-only">Switch role (Super Admin)</label>
+  <select
+    id="vs-sa-role"
+    class="max-w-[140px] rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-surface px-2 py-1.5 text-xs font-medium text-vs-fg"
+    data-vs-sa-role
+  >
+    {
+      roles.map((r) => (
+        <option value={r.id}>
+          {r.label}
+        </option>
+      ))
+    }
+  </select>
+  <span class="hidden text-[10px] uppercase tracking-wide text-vs-muted sm:inline">impersonate</span>
+</div>
+
+<script>
+  import { getSessionRole, switchRole } from '@/lib/client-auth';
+
+  document.querySelectorAll<HTMLSelectElement>('[data-vs-sa-role]').forEach((sel) => {
+    sel.value = getSessionRole();
+    sel.addEventListener('change', () => {
+      const prev = getSessionRole();
+      const role = sel.value;
+      if (role === prev) return;
+      const r = switchRole(role);
+      if (!r.ok) {
+        window.dispatchEvent(
+          new CustomEvent('vs:toast', { detail: { message: r.message || 'Could not switch role', level: 'error' } }),
+        );
+        sel.value = prev;
+        return;
+      }
+      window.location.reload();
+    });
+  });
+</script>

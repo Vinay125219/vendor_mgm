@@ -1,0 +1,206 @@
+---
+import '@/styles/global.css';
+import { APP_NAME, VENDOR_BASE_PATH } from '@/lib/constants';
+import { ROLE_LABELS } from '@/lib/rbac';
+import { vendorNav } from '@/components/navigation/nav-items';
+import NavIcon from '@/components/navigation/NavIcon.astro';
+import ThemeToggle from '@/components/islands/ThemeToggle.astro';
+import ToastHost from '@/components/islands/ToastHost.astro';
+import SuperAdminRoleSwitch from '@/components/islands/SuperAdminRoleSwitch.astro';
+import { mockNotifications } from '@/services/mock-store';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Vendor operations cockpit' } = Astro.props;
+const path = Astro.url.pathname;
+const seedUnread = mockNotifications.filter((n) => !n.read).length;
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <title>{title} · {APP_NAME}</title>
+    <script is:inline>
+      try {
+        if (
+          location.pathname.startsWith('/vendor') &&
+          !localStorage.getItem('vs_auth_token')
+        ) {
+          location.replace('/login?redirect=' + encodeURIComponent(location.pathname + location.search));
+        }
+      } catch (_) {}
+    </script>
+  </head>
+  <body class="min-h-full bg-vs-bg">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[200] focus:rounded-md focus:bg-vs-accent focus:px-3 focus:py-2 focus:text-white"
+    >
+      Skip to content
+    </a>
+    <div class="flex min-h-screen">
+      <aside
+        class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full border-r border-vs-border bg-vs-surface shadow-[var(--shadow-vs-md)] transition-transform duration-300 lg:translate-x-0"
+        id="vs-sidebar"
+        aria-label="Primary"
+      >
+        <div class="flex h-16 items-center gap-2 border-b border-vs-border px-5">
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-[var(--radius-vs-sm)] bg-vs-accent text-sm font-bold text-white"
+          >
+            VS
+          </div>
+          <div>
+            <p class="text-sm font-bold tracking-tight text-vs-fg">{APP_NAME}</p>
+            <p class="text-[11px] text-vs-muted">Vendor Control</p>
+          </div>
+        </div>
+        <nav class="flex flex-col gap-0.5 p-3">
+          {
+            vendorNav.map((item) => {
+              const active = path === item.href || path.startsWith(item.href + '/');
+              return (
+                <a
+                  href={item.href}
+                  data-req-perm={item.permission}
+                  data-astro-prefetch
+                  class:list={[
+                    'flex items-center gap-3 rounded-[var(--radius-vs-sm)] px-3 py-2.5 text-sm font-medium transition-colors',
+                    active
+                      ? 'bg-vs-accent-soft text-vs-accent'
+                      : 'text-vs-muted hover:bg-vs-elevated hover:text-vs-fg',
+                  ]}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <NavIcon name={item.icon} class="h-5 w-5" />
+                  {item.label}
+                </a>
+              );
+            })
+          }
+        </nav>
+        <div class="absolute bottom-0 left-0 right-0 border-t border-vs-border p-4 text-[11px] text-vs-muted">
+          <p class="font-mono text-[10px] uppercase tracking-wider">Static demo</p>
+          <p class="mt-1">Mount path: {VENDOR_BASE_PATH}</p>
+        </div>
+      </aside>
+
+      <div
+        class="flex min-h-screen flex-1 flex-col lg:pl-64"
+        id="vs-shell-main"
+      >
+        <header
+          class="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-vs-border bg-vs-bg/90 px-4 backdrop-blur-md sm:px-6"
+        >
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-surface lg:hidden"
+              aria-controls="vs-sidebar"
+              aria-expanded="false"
+              data-vs-sidebar-toggle
+            >
+              <span class="sr-only">Open menu</span>
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-vs-muted">Workspace</p>
+              <p class="text-sm font-semibold text-vs-fg">{title}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 sm:gap-3">
+            <span
+              class="hidden max-w-[160px] truncate text-xs text-vs-muted lg:inline"
+              data-vs-header-email
+            >
+            </span>
+            <span
+              class="hidden rounded-full border border-vs-border bg-vs-elevated px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-vs-muted sm:inline"
+              title="From browser session"
+              data-vs-header-role
+            >
+            </span>
+            <div class="hidden" data-vs-sa-switch-wrap>
+              <SuperAdminRoleSwitch />
+            </div>
+            <ThemeToggle />
+            <button
+              type="button"
+              class="hidden rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-surface px-2 py-1.5 text-xs font-medium text-vs-muted hover:text-vs-fg sm:inline"
+              data-vs-logout
+            >
+              Sign out
+            </button>
+            <a
+              href="/vendor/notifications"
+              data-astro-prefetch
+              class="relative flex h-10 w-10 items-center justify-center rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-surface text-vs-fg"
+              aria-label={`Notifications${seedUnread ? `, ${seedUnread} unread` : ''}`}
+            >
+              <span
+                class:list={['absolute right-2 top-2 h-2 w-2 rounded-full bg-vs-accent', seedUnread === 0 && 'hidden']}
+                data-vs-notify-dot
+                aria-hidden="true"
+              />
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.75"
+                  d="M6 8a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7M10.3 21a1.94 1.94 0 0 0 3.4 0"
+                />
+              </svg>
+            </a>
+          </div>
+        </header>
+
+        <main id="main-content" class="flex-1 px-4 py-8 sm:px-6 lg:px-10">
+          <slot />
+        </main>
+      </div>
+    </div>
+
+    <div
+      class="fixed inset-0 z-30 bg-black/40 opacity-0 pointer-events-none transition-opacity lg:hidden"
+      id="vs-sidebar-backdrop"
+      aria-hidden="true"
+    ></div>
+
+    <ToastHost />
+
+    <script>
+      import '@/scripts/shell-runtime';
+      const sidebar = document.getElementById('vs-sidebar');
+      const backdrop = document.getElementById('vs-sidebar-backdrop');
+      const toggle = document.querySelector('[data-vs-sidebar-toggle]');
+
+      function setOpen(open: boolean) {
+        sidebar?.classList.toggle('-translate-x-full', !open);
+        backdrop?.classList.toggle('opacity-0', !open);
+        backdrop?.classList.toggle('pointer-events-none', !open);
+        toggle?.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+
+      toggle?.addEventListener('click', () => {
+        const open = sidebar?.classList.contains('-translate-x-full');
+        setOpen(!!open);
+      });
+      backdrop?.addEventListener('click', () => setOpen(false));
+    </script>
+  </body>
+</html>

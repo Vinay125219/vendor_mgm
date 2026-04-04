@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-vs-bg: oklch(0.985 0.004 264);
+  --color-vs-surface: oklch(1 0 0);
+  --color-vs-elevated: oklch(0.995 0.003 264);
+  --color-vs-border: oklch(0.91 0.01 264);
+  --color-vs-muted: oklch(0.52 0.02 264);
+  --color-vs-fg: oklch(0.22 0.02 264);
+  --color-vs-accent: oklch(0.55 0.18 264);
+  --color-vs-accent-soft: oklch(0.94 0.04 264);
+  --color-vs-success: oklch(0.55 0.14 155);
+  --color-vs-warning: oklch(0.72 0.14 75);
+  --color-vs-danger: oklch(0.55 0.2 25);
+  --color-vs-info: oklch(0.55 0.12 240);
+
+  --shadow-vs-sm: 0 1px 2px oklch(0 0 0 / 0.04);
+  --shadow-vs-md: 0 4px 16px oklch(0 0 0 / 0.06);
+  --shadow-vs-lg: 0 12px 40px oklch(0 0 0 / 0.08);
+  --radius-vs: 0.75rem;
+  --radius-vs-sm: 0.5rem;
+}
+
+html.dark {
+  --color-vs-bg: oklch(0.16 0.02 264);
+  --color-vs-surface: oklch(0.2 0.025 264);
+  --color-vs-elevated: oklch(0.24 0.03 264);
+  --color-vs-border: oklch(0.32 0.03 264);
+  --color-vs-muted: oklch(0.65 0.02 264);
+  --color-vs-fg: oklch(0.95 0.01 264);
+  --color-vs-accent: oklch(0.68 0.16 264);
+  --color-vs-accent-soft: oklch(0.28 0.08 264);
+  --shadow-vs-sm: 0 1px 2px oklch(0 0 0 / 0.25);
+  --shadow-vs-md: 0 4px 24px oklch(0 0 0 / 0.35);
+  --shadow-vs-lg: 0 12px 48px oklch(0 0 0 / 0.45);
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth antialiased;
+  }
+  body {
+    @apply bg-vs-bg text-vs-fg font-sans text-[15px] leading-relaxed;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-vs-accent;
+  }
+}
+
+@layer utilities {
+  .vs-card {
+    @apply rounded-[var(--radius-vs)] border border-vs-border bg-vs-surface shadow-[var(--shadow-vs-md)];
+  }
+  .vs-glass {
+    @apply border border-vs-border/80 bg-vs-surface/80 backdrop-blur-md;
+  }
+}
+
+@keyframes vs-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vs-animate-in {
+  animation: vs-fade-in 0.35s ease-out both;
+}

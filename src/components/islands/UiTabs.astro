@@ -1,0 +1,101 @@
+---
+interface Props {
+  labels: [string, string];
+  class?: string;
+}
+
+const { labels, class: className = '' } = Astro.props;
+const [l1, l2] = labels;
+const groupId = `tabs_${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<div class:list={['flex flex-col gap-4', className]} data-vs-tabs={groupId}>
+  <div
+    role="tablist"
+    aria-label="Section tabs"
+    class="flex flex-wrap gap-1 rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-elevated/50 p-1"
+  >
+    <button
+      type="button"
+      role="tab"
+      id={`${groupId}_a_tab`}
+      aria-selected="true"
+      aria-controls={`${groupId}_a_panel`}
+      tabindex="0"
+      data-vs-tab="a"
+      data-active="true"
+      class="rounded-[var(--radius-vs-sm)] px-3 py-1.5 text-sm font-medium text-vs-muted transition data-[active=true]:bg-vs-surface data-[active=true]:text-vs-fg data-[active=true]:shadow-[var(--shadow-vs-sm)]"
+    >
+      {l1}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      id={`${groupId}_b_tab`}
+      aria-selected="false"
+      aria-controls={`${groupId}_b_panel`}
+      tabindex="-1"
+      data-vs-tab="b"
+      data-active="false"
+      class="rounded-[var(--radius-vs-sm)] px-3 py-1.5 text-sm font-medium text-vs-muted transition data-[active=true]:bg-vs-surface data-[active=true]:text-vs-fg data-[active=true]:shadow-[var(--shadow-vs-sm)]"
+    >
+      {l2}
+    </button>
+  </div>
+
+  <div
+    role="tabpanel"
+    id={`${groupId}_a_panel`}
+    aria-labelledby={`${groupId}_a_tab`}
+    tabindex="0"
+    data-vs-panel="a"
+    class="rounded-[var(--radius-vs)] border border-vs-border/60 bg-vs-surface/60 p-4 outline-none focus-visible:ring-2 focus-visible:ring-vs-accent/40"
+  >
+    <slot name="panel-a" />
+  </div>
+  <div
+    role="tabpanel"
+    id={`${groupId}_b_panel`}
+    aria-labelledby={`${groupId}_b_tab`}
+    tabindex="0"
+    hidden
+    data-vs-panel="b"
+    class="rounded-[var(--radius-vs)] border border-vs-border/60 bg-vs-surface/60 p-4 outline-none focus-visible:ring-2 focus-visible:ring-vs-accent/40"
+  >
+    <slot name="panel-b" />
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('[data-vs-tabs]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-vs-tab]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-vs-panel]'));
+
+    function activate(id: string) {
+      tabs.forEach((btn) => {
+        const on = btn.getAttribute('data-vs-tab') === id;
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        btn.setAttribute('data-active', on ? 'true' : 'false');
+        btn.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach((p) => {
+        const on = p.getAttribute('data-vs-panel') === id;
+        p.hidden = !on;
+      });
+    }
+
+    tabs.forEach((btn) => {
+      btn.addEventListener('click', () => activate(btn.getAttribute('data-vs-tab') || ''));
+      btn.addEventListener('keydown', (e) => {
+        const i = tabs.indexOf(btn);
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const next = (e.key === 'ArrowRight' ? i + 1 : i - 1 + tabs.length) % tabs.length;
+          const id = tabs[next].getAttribute('data-vs-tab') || '';
+          activate(id);
+          tabs[next].focus();
+        }
+      });
+    });
+  });
+</script>

@@ -1,0 +1,184 @@
+---
+import '@/styles/global.css';
+import { APP_NAME } from '@/lib/constants';
+import { ROLE_LABELS } from '@/lib/rbac';
+import type { UserRole } from '@/types';
+
+const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 'vendor'];
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap"
+    />
+    <title>Sign in · {APP_NAME}</title>
+    <script is:inline>
+      try {
+        if (location.pathname === '/login' && localStorage.getItem('vs_auth_token')) {
+          var q = new URLSearchParams(location.search).get('redirect') || '/vendor';
+          location.replace(q);
+        }
+      } catch (_) {}
+    </script>
+  </head>
+  <body class="min-h-full bg-vs-bg text-vs-fg antialiased">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[200] focus:rounded-md focus:bg-vs-accent focus:px-3 focus:py-2 focus:text-white"
+    >
+      Skip to content
+    </a>
+    <div id="main-content" class="flex min-h-screen flex-col items-center justify-center px-4 py-12">
+      <div class="mb-10 text-center">
+        <div
+          class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[var(--radius-vs)] bg-vs-accent text-xl font-bold text-white shadow-[var(--shadow-vs-md)]"
+        >
+          VS
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight">{APP_NAME}</h1>
+        <p class="mt-1 text-sm text-vs-muted">Vendor operations — sign in to continue</p>
+      </div>
+
+      <div class="vs-card w-full max-w-md p-8 shadow-[var(--shadow-vs-lg)]">
+        <form id="vs-login-form" class="flex flex-col gap-4">
+          <div
+            id="vs-login-error"
+            class="hidden rounded-[var(--radius-vs-sm)] border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-800 dark:text-red-200"
+            role="alert"
+          ></div>
+
+          <label class="flex flex-col gap-1.5 text-sm">
+            <span class="font-medium text-vs-muted">Email</span>
+            <input
+              name="email"
+              id="vs-email-input"
+              type="email"
+              autocomplete="username"
+              required
+              placeholder="your@email.com"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2.5 text-vs-fg outline-none ring-vs-accent/30 focus:border-vs-accent focus:ring-2"
+            />
+          </label>
+          <label class="flex flex-col gap-1.5 text-sm">
+            <span class="font-medium text-vs-muted">Password</span>
+            <input
+              name="password"
+              id="vs-password-input"
+              type="password"
+              autocomplete="current-password"
+              required
+              placeholder="••••••••"
+              class="rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-bg px-3 py-2.5 text-vs-fg outline-none ring-vs-accent/30 focus:border-vs-accent focus:ring-2"
+            />
+          </label>
+
+          <button
+            type="submit"
+            id="vs-submit-btn"
+            class="mt-2 rounded-[var(--radius-vs-sm)] bg-vs-accent py-3 text-sm font-semibold text-white shadow-[var(--shadow-vs-sm)] transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vs-accent disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Sign in
+          </button>
+        </form>
+
+        <div class="mt-6 rounded-[var(--radius-vs-sm)] border border-dashed border-vs-border bg-vs-elevated/50 px-4 py-3 text-xs text-vs-muted">
+          <p class="font-semibold text-vs-fg">Backend Integration Ready</p>
+          <p class="mt-2 text-[11px] leading-relaxed">
+            This form submits to <code class="font-mono text-[10px] text-vs-fg">/api/v1/auth/login</code>
+          </p>
+          <p class="mt-2 text-[11px] leading-relaxed">
+            Response format: success with token, user, and expiration
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById('vs-login-form') as HTMLFormElement;
+      const errEl = document.getElementById('vs-login-error');
+      const submitBtn = document.getElementById('vs-submit-btn') as HTMLButtonElement;
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errEl?.classList.add('hidden');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Signing in...';
+
+        try {
+          const fd = new FormData(form);
+          const email = String(fd.get('email') || '').trim();
+          const password = String(fd.get('password') || '');
+
+          if (!email || !password) {
+            throw new Error('Email and password are required');
+          }
+
+          const response = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email, password }),
+          });
+
+          const body = (await response.json()) as Record<string, unknown>;
+
+          if (!response.ok || typeof body !== 'object' || body === null) {
+            throw new Error('Login failed. Please check your credentials.');
+          }
+
+          if ('error' in body && typeof body.error === 'object' && body.error !== null) {
+            const error = body.error as Record<string, unknown>;
+            throw new Error(String(error.message || 'Login failed'));
+          }
+
+          if (
+            'ok' in body &&
+            body.ok === true &&
+            'token' in body &&
+            typeof body.token === 'object' &&
+            body.token !== null &&
+            'user' in body &&
+            typeof body.user === 'object' &&
+            body.user !== null
+          ) {
+            const token = body.token as Record<string, unknown>;
+            const user = body.user as Record<string, unknown>;
+
+            if (typeof token.accessToken === 'string' && typeof token.expiresAt === 'number') {
+              const { storeAuthToken } = await import('@/lib/client-auth');
+              storeAuthToken(
+                { accessToken: token.accessToken, expiresAt: token.expiresAt },
+                { email: String(user.email || ''), role: String(user.role || 'admin') as any }
+              );
+
+              const params = new URLSearchParams(window.location.search);
+              const redirectTo = params.get('redirect') || '/vendor';
+              window.location.href = redirectTo;
+              return;
+            }
+          }
+
+          throw new Error('Invalid response from server');
+        } catch (error) {
+          if (errEl) {
+            errEl.textContent =
+              error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
+            errEl.classList.remove('hidden');
+          }
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign in';
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+---
+
+<div class:list={['overflow-x-auto rounded-[var(--radius-vs)] border border-vs-border', className]}>
+  <table class="min-w-full border-collapse text-left text-sm">
+    <slot />
+  </table>
+</div>

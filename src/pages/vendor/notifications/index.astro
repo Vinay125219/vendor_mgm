@@ -1,0 +1,86 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import { mockNotifications } from '@/services/mock-store';
+import { formatDate } from '@/lib/format';
+---
+
+<VendorShell title="Notifications">
+  <PageHeader
+    title="Notification center"
+    description="In-app, email, and SMS routing — task reminders surface here for vendor SLAs."
+  >
+    <button
+      type="button"
+      slot="actions"
+      id="vs-notify-readall"
+      class="inline-flex items-center justify-center rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-surface px-4 py-2.5 text-sm font-semibold text-vs-fg shadow-[var(--shadow-vs-sm)] hover:bg-vs-elevated"
+    >
+      Mark all read
+    </button>
+  </PageHeader>
+
+  <ul class="flex flex-col gap-3" id="vs-notify-list">
+    {
+      mockNotifications.map((n) => (
+        <li>
+          <UiCard padding="md" class:list={[!n.read && 'border-vs-accent/30']}>
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="font-semibold text-vs-fg">{n.title}</p>
+                <p class="mt-1 text-sm text-vs-muted">{n.body}</p>
+                <p class="mt-2 text-xs text-vs-muted">{formatDate(n.createdAt)}</p>
+              </div>
+              <div class="flex flex-col items-end gap-2">
+                <UiBadge variant={n.read ? 'neutral' : 'accent'}>{n.read ? 'Read' : 'New'}</UiBadge>
+                {n.href && (
+                  <UiButton href={n.href} variant="ghost" size="sm">
+                    Open
+                  </UiButton>
+                )}
+              </div>
+            </div>
+          </UiCard>
+        </li>
+      ))
+    }
+  </ul>
+</VendorShell>
+
+<script>
+  import { loadState, markAllNotificationsRead } from '@/lib/client-store';
+  import { formatDate } from '@/lib/format';
+
+  function renderNotifications() {
+    const ul = document.getElementById('vs-notify-list');
+    if (!ul) return;
+    const items = loadState().notifications;
+    ul.innerHTML = items
+      .map((n) => {
+        const border = !n.read ? 'border-vs-accent/30' : '';
+        const badge = n.read ? 'neutral' : 'accent';
+        const badgeText = n.read ? 'Read' : 'New';
+        const open = n.href
+          ? `<a href="${n.href}" class="inline-flex items-center justify-center rounded-[var(--radius-vs-sm)] px-3 py-1.5 text-sm font-medium text-vs-accent hover:bg-vs-accent-soft">Open</a>`
+          : '';
+        return `<li><div class="vs-card rounded-[var(--radius-vs)] border border-vs-border bg-vs-surface p-5 shadow-[var(--shadow-vs-sm)] ${border}"><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="font-semibold text-vs-fg">${escapeHtml(n.title)}</p><p class="mt-1 text-sm text-vs-muted">${escapeHtml(n.body)}</p><p class="mt-2 text-xs text-vs-muted">${formatDate(n.createdAt)}</p></div><div class="flex flex-col items-end gap-2"><span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide ${badge === 'accent' ? 'bg-vs-accent-soft text-vs-accent' : 'bg-vs-elevated text-vs-muted'}" role="status">${badgeText}</span>${open}</div></div></div></li>`;
+      })
+      .join('');
+  }
+
+  function escapeHtml(s: string) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+
+  renderNotifications();
+
+  document.getElementById('vs-notify-readall')?.addEventListener('click', () => {
+    markAllNotificationsRead();
+    window.dispatchEvent(new CustomEvent('vs:toast', { detail: { message: 'All marked read', level: 'success' } }));
+    renderNotifications();
+    document.querySelectorAll<HTMLElement>('[data-vs-notify-dot]').forEach((d) => d.classList.add('hidden'));
+  });
+</script>

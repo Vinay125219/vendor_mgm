@@ -1,0 +1,50 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import ChartBlock from '@/components/islands/ChartBlock.astro';
+import { getFulfillmentTrends } from '@/services/dashboard.service';
+
+const fulfill = getFulfillmentTrends();
+const spec = {
+  type: 'line' as const,
+  labels: fulfill.map((f) => f.date),
+  datasets: [
+    {
+      label: 'Net revenue (index)',
+      data: fulfill.map((f) => f.fulfilled * 1200 + f.pending * 200),
+      borderColor: 'rgb(14, 165, 233)',
+      backgroundColor: 'rgba(14, 165, 233, 0.1)',
+    },
+  ],
+};
+---
+
+<VendorShell title="Reports">
+  <PageHeader
+    title="Reports"
+    description="Exportable slices for finance and category managers — powered by the same aggregates as the dashboard."
+  >
+    <UiButton variant="primary" slot="actions">Download XLSX</UiButton>
+    <UiButton variant="secondary" slot="actions">Schedule email</UiButton>
+  </PageHeader>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <UiCard padding="md">
+      <h2 class="text-base font-semibold">Revenue index (mock)</h2>
+      <p class="text-xs text-vs-muted">Swap with warehouse queries later.</p>
+      <div class="mt-4">
+        <ChartBlock spec={spec} />
+      </div>
+    </UiCard>
+    <UiCard padding="md">
+      <h2 class="text-base font-semibold">Saved views</h2>
+      <ul class="mt-4 space-y-2 text-sm text-vs-muted">
+        <li class="rounded-[var(--radius-vs-sm)] border border-vs-border px-3 py-2">Payout readiness · weekly</li>
+        <li class="rounded-[var(--radius-vs-sm)] border border-vs-border px-3 py-2">Catalog risk · daily</li>
+        <li class="rounded-[var(--radius-vs-sm)] border border-vs-border px-3 py-2">SLA breaches · realtime</li>
+      </ul>
+    </UiCard>
+  </div>
+</VendorShell>

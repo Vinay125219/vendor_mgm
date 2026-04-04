@@ -1,0 +1,37 @@
+---
+interface Props {
+  placeholder?: string;
+  tableSelector?: string;
+}
+
+const { placeholder = 'Search…', tableSelector = '[data-vs-table]' } = Astro.props;
+---
+
+<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <label class="sr-only" for="vs-table-filter">Filter table</label>
+  <input
+    id="vs-table-filter"
+    type="search"
+    class="w-full max-w-md rounded-[var(--radius-vs-sm)] border border-vs-border bg-vs-surface px-3 py-2 text-sm text-vs-fg shadow-[var(--shadow-vs-sm)] placeholder:text-vs-muted focus:border-vs-accent focus:outline-none focus:ring-2 focus:ring-vs-accent/30"
+    placeholder={placeholder}
+    autocomplete="off"
+    data-vs-table-filter
+    data-table-selector={tableSelector}
+  />
+  <slot />
+</div>
+
+<script>
+  document.querySelectorAll('[data-vs-table-filter]').forEach((input) => {
+    input.addEventListener('input', () => {
+      const sel = (input as HTMLInputElement).dataset.tableSelector ?? '[data-vs-table]';
+      const table = document.querySelector(sel);
+      if (!table) return;
+      const q = ((input as HTMLInputElement).value || '').toLowerCase().trim();
+      table.querySelectorAll('tbody tr').forEach((row) => {
+        const text = (row.textContent || '').toLowerCase();
+        (row as HTMLElement).style.display = !q || text.includes(q) ? '' : 'none';
+      });
+    });
+  });
+</script>

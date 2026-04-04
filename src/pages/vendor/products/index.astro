@@ -1,0 +1,67 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import UiTable from '@/components/ui/UiTable.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import TableFilter from '@/components/islands/TableFilter.astro';
+import { mockProducts, mockVendors } from '@/services/mock-store';
+import { formatINRFromPaise } from '@/lib/format';
+
+function vendorName(id: string) {
+  return mockVendors.find((v) => v.id === id)?.businessName ?? id;
+}
+---
+
+<VendorShell title="Products">
+  <PageHeader
+    title="Catalog"
+    description="Submission, approval, pricing rules, and publish gates — aligned with storefront product schema."
+  >
+    <UiButton href="/vendor/products/new" variant="primary" slot="actions">New product</UiButton>
+    <UiButton variant="secondary" slot="actions">Bulk upload</UiButton>
+  </PageHeader>
+
+  <TableFilter placeholder="Search SKU, title, vendor…" />
+  <UiTable>
+    <thead class="border-b border-vs-border bg-vs-elevated/80 text-xs uppercase tracking-wide text-vs-muted">
+      <tr>
+        <th class="px-4 py-3 font-semibold">Product</th>
+        <th class="px-4 py-3 font-semibold">Vendor</th>
+        <th class="px-4 py-3 font-semibold">Price</th>
+        <th class="px-4 py-3 font-semibold">Stock</th>
+        <th class="px-4 py-3 font-semibold">Approval</th>
+        <th class="px-4 py-3 font-semibold">Published</th>
+        <th class="px-4 py-3 font-semibold"></th>
+      </tr>
+    </thead>
+    <tbody data-vs-table>
+      {
+        mockProducts.map((p) => (
+          <tr class="border-b border-vs-border/80 hover:bg-vs-elevated/40">
+            <td class="px-4 py-3">
+              <p class="font-medium text-vs-fg">{p.title}</p>
+              <p class="font-mono text-xs text-vs-muted">{p.sku}</p>
+            </td>
+            <td class="px-4 py-3 text-sm text-vs-muted">{vendorName(p.vendorId)}</td>
+            <td class="px-4 py-3 text-sm tabular-nums">{formatINRFromPaise(p.basePricePaise)}</td>
+            <td class="px-4 py-3 text-sm tabular-nums">{p.stock}</td>
+            <td class="px-4 py-3">
+              <UiBadge variant={p.approvalStatus === 'approved' ? 'approved' : 'pending'}>
+                {p.approvalStatus.replace('_', ' ')}
+              </UiBadge>
+            </td>
+            <td class="px-4 py-3">
+              <UiBadge variant={p.published ? 'success' : 'neutral'}>{p.published ? 'Live' : 'Draft'}</UiBadge>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <UiButton href={`/vendor/products/${p.id}`} variant="ghost" size="sm">
+                Edit
+              </UiButton>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </UiTable>
+</VendorShell>
