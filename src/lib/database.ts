@@ -7,6 +7,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
 import { config } from './backend-config';
+import { DEMO_ACCOUNTS_BY_ROLE, DEMO_SHARED_PASSWORD } from './demo-accounts';
 
 // ============================================================================
 // Type Definitions
@@ -187,62 +188,50 @@ export class Database {
    * Seed initial test data
    */
   private seedInitialData(): void {
-    // Create admin user
-    const adminPasswordHash = bcrypt.hashSync('admin@123', config.bcryptRounds);
-    const admin: User = {
-      id: uuidv4(),
-      email: 'admin@vendorsphere.io',
-      passwordHash: adminPasswordHash,
-      role: 'admin',
-      name: 'Admin User',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    this.users.set(admin.id, admin);
+    // Create demo users from DEMO_ACCOUNTS_BY_ROLE
+    const demoRoles: Array<'super_admin' | 'admin' | 'vendor' | 'finance' | 'support'> = ['super_admin', 'admin', 'vendor', 'finance', 'support'];
+    
+    let vendorUserId: string | undefined;
 
-    // Create super admin user
-    const superAdminPasswordHash = bcrypt.hashSync('superadmin@123', config.bcryptRounds);
-    const superAdmin: User = {
-      id: uuidv4(),
-      email: 'superadmin@vendorsphere.io',
-      passwordHash: superAdminPasswordHash,
-      role: 'super-admin',
-      name: 'Super Admin',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    this.users.set(superAdmin.id, superAdmin);
+    for (const role of demoRoles) {
+      const account = DEMO_ACCOUNTS_BY_ROLE[role];
+      const passwordHash = bcrypt.hashSync(account.password, config.bcryptRounds);
+      
+      const user: User = {
+        id: uuidv4(),
+        email: account.email,
+        passwordHash,
+        role: role === 'super_admin' ? 'admin' : role === 'vendor' ? 'vendor' : 'admin',
+        name: role.charAt(0).toUpperCase() + role.slice(1),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
 
-    // Create sample vendor user
-    const vendorPasswordHash = bcrypt.hashSync('vendor@123', config.bcryptRounds);
-    const vendorUser: User = {
-      id: uuidv4(),
-      email: 'vendor@example.com',
-      passwordHash: vendorPasswordHash,
-      role: 'vendor',
-      name: 'Vendor User',
-      phone: '+91 98765 43210',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    this.users.set(vendorUser.id, vendorUser);
+      // Save vendor user ID for vendor creation
+      if (role === 'vendor') {
+        vendorUserId = user.id;
+      }
 
-    // Create sample vendor
-    const vendor: Vendor = {
-      id: uuidv4(),
-      name: 'Electronics Hub',
-      email: 'contact@electronicshub.com',
-      phone: '+91 98765 43210',
-      businessType: 'electronics',
-      gstNumber: '18AABCU1234H1Z0',
-      status: 'approved',
-      onboardingStep: 4,
-      userId: vendorUser.id,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    vendorUser.vendorId = vendor.id;
-    this.vendors.set(vendor.id, vendor);
+      this.users.set(user.id, user);
+    }
+
+    // Create sample vendor if vendor user exists
+    if (vendorUserId) {
+      const vendor: Vendor = {
+        id: uuidv4(),
+        name: 'Electronics Hub',
+        email: 'contact@electronicshub.com',
+        phone: '+91 98765 43210',
+        businessType: 'electronics',
+        gstNumber: '18AABCU1234H1Z0',
+        status: 'approved',
+        onboardingStep: 4,
+        userId: vendorUserId,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      this.vendors.set(vendor.id, vendor);
+    }
   }
 
   // ========== USER OPERATIONS ==========
