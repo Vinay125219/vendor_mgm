@@ -159,11 +159,11 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
             const user = data.user;
 
             if (typeof token.accessToken === 'string' && typeof token.expiresAt === 'number') {
-              const { storeAuthToken } = await import('@/lib/client-auth');
-              storeAuthToken(
-                { accessToken: token.accessToken, expiresAt: token.expiresAt },
-                { email: String(user.email || ''), role: String(user.role || 'admin') }
-              );
+              // Store auth token in localStorage
+              localStorage.setItem('vs_auth_token', token.accessToken);
+              localStorage.setItem('vs_auth_role', String(user.role || 'admin'));
+              localStorage.setItem('vs_auth_email', String(user.email || ''));
+              localStorage.setItem('vs_auth_expires', token.expiresAt.toString());
 
               const params = new URLSearchParams(window.location.search);
               const redirectTo = params.get('redirect') || '/vendor';
