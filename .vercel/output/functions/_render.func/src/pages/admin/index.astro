@@ -80,43 +80,47 @@ const complianceSpec = {
 
   <!-- Pending Actions -->
   <div class="mt-8 grid gap-6">
-    <UiCard padding="lg" id="vendor-list">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold">Vendors Pending Approval</h2>
-        <UiBadge variant="warning">{kpis.pendingApprovals} Pending</UiBadge>
-      </div>
-      <div class="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div class="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-3">
-            <div>
-              <p class="font-medium">Vendor {i + 1}</p>
-              <p class="text-xs text-vs-muted">GSTIN: 18AABCU{String(1234 + i).padStart(4, '0')}H1Z0</p>
+    <div id="vendor-list">
+      <UiCard padding="lg">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Vendors Pending Approval</h2>
+          <UiBadge variant="warning">{kpis.pendingApprovals} Pending</UiBadge>
+        </div>
+        <div class="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div class="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-3">
+              <div>
+                <p class="font-medium">Vendor {i + 1}</p>
+                <p class="text-xs text-vs-muted">GSTIN: 18AABCU{String(1234 + i).padStart(4, '0')}H1Z0</p>
+              </div>
+              <div class="flex gap-2">
+                <UiButton variant="secondary" size="sm">Review</UiButton>
+                <UiButton variant="primary" size="sm">Approve</UiButton>
+              </div>
             </div>
-            <div class="flex gap-2">
-              <UiButton variant="secondary" size="sm">Review</UiButton>
-              <UiButton variant="primary" size="sm">Approve</UiButton>
-            </div>
-          </div>
-        ))}
-      </div>
-    </UiCard>
+          ))}
+        </div>
+      </UiCard>
+    </div>
 
     <!-- Compliance Alerts -->
-    <UiCard padding="lg" id="compliance">
-      <h2 class="mb-4 text-lg font-semibold">Compliance Alerts & Actions</h2>
-      <div class="space-y-3">
-        {['High GMV vendor - verify KYC', 'Duplicate vendor registration detected', 'Unusual payment pattern flagged', 'Vendor suspension review due'].map((alert, i) => (
-          <div class="flex items-center justify-between border-b border-vs-border py-3 last:border-b-0">
-            <div>
-              <p class="font-medium">{alert}</p>
-              <p class="text-xs text-vs-muted">{formatDate(Date.now() - i * 3600000)}</p>
+    <div id="compliance">
+      <UiCard padding="lg">
+        <h2 class="mb-4 text-lg font-semibold">Compliance Alerts & Actions</h2>
+        <div class="space-y-3">
+          {['High GMV vendor - verify KYC', 'Duplicate vendor registration detected', 'Unusual payment pattern flagged', 'Vendor suspension review due'].map((alert, i) => (
+            <div class="flex items-center justify-between border-b border-vs-border py-3 last:border-b-0">
+              <div>
+                <p class="font-medium">{alert}</p>
+                <p class="text-xs text-vs-muted">{formatDate(new Date(Date.now() - i * 3600000).toISOString())}</p>
+              </div>
+              <UiBadge variant={i === 0 ? 'danger' : 'warning'}>
+                {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'][i]}
+              </UiBadge>
             </div>
-            <UiBadge variant={i === 0 ? 'error' : 'warning'}>
-              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'][i]}
-            </UiBadge>
-          </div>
-        ))}
-      </div>
-    </UiCard>
+          ))}
+        </div>
+      </UiCard>
+    </div>
   </div>
 </VendorShell>
