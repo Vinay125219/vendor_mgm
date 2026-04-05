@@ -1,0 +1,101 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import KpiCard from '@/components/ui/KpiCard.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import ChartBlock from '@/components/islands/ChartBlock.astro';
+import {
+  getDashboardKpis,
+  getPaymentStatusDistribution,
+  getFulfillmentTrends,
+} from '@/services/dashboard.service';
+import { formatINRFromPaise } from '@/lib/format';
+
+const kpis = getDashboardKpis();
+const payDist = getPaymentStatusDistribution();
+const fulfill = getFulfillmentTrends();
+
+const paySpec = {
+  type: 'doughnut' as const,
+  labels: payDist.map((p) => p.status),
+  datasets: [
+    {
+      label: 'Payment Status',
+      data: payDist.map((p) => p.count),
+      backgroundColor: ['#22c55e', '#eab308', '#ef4444', '#6366f1', '#94a3b8'],
+    },
+  ],
+};
+
+const revenueSpec = {
+  type: 'bar' as const,
+  labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  datasets: [
+    {
+      label: 'Revenue (₹)',
+      data: [45000, 52000, 48000, 61000, 55000, 58000, 63000],
+      backgroundColor: 'rgba(34, 197, 94, 0.7)',
+    },
+  ],
+};
+---
+
+<VendorShell title="Finance Dashboard">
+  <PageHeader
+    title="Financial operations"
+    description="Payment tracking, settlement management, and revenue analytics — finance team view with detailed accounting."
+  >
+    <UiButton href="/finance/settlements" variant="primary" slot="actions">Settlements</UiButton>
+    <UiButton href="/finance/reports" variant="secondary" slot="actions">Export report</UiButton>
+  </PageHeader>
+
+  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <KpiCard label="Total revenue" value={formatINRFromPaise(kpis.grossRevenuePaise)} hint="Captured payments" trendUp trend="+12% vs last month"/>
+    <KpiCard label="Pending settlements" value={String(kpis.completedOrders)} hint="Awaiting payout" />
+    <KpiCard label="Completed orders" value={String(kpis.completedOrders)} trend="7d moving avg" />
+    <KpiCard
+      label="Settlement rate"
+      value="99.2%"
+      hint="On-time payouts"
+      trendUp
+    />
+
+    <KpiCard label="Refunds processed" value="₹2,45,000" hint="This month" />
+    <KpiCard label="Chargebacks" value={String(Math.floor(kpis.completedOrders * 0.02))} hint="Open disputes" />
+    <KpiCard label="Reconciliation" value="100%" hint="Complete" trendUp />
+    <KpiCard label="Average hold period" value="2.3 days" hint="Payment to settlement" />
+  </section>
+
+  <div class="mt-8 grid gap-6 lg:grid-cols-2">
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Payment Status Overview</h2>
+      <ChartBlock spec={paySpec} />
+    </UiCard>
+
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Daily Revenue</h2>
+      <ChartBlock spec={revenueSpec} />
+    </UiCard>
+  </div>
+
+  <div class="mt-8 grid gap-6">
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Pending Settlements</h2>
+      <div class="space-y-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div class="flex items-center justify-between border-b border-vs-border py-3 last:border-b-0">
+            <div>
+              <p class="font-medium">Vendor {i + 1}</p>
+              <p class="text-xs text-vs-muted">Settlement ID: SETL-{String(1001 + i).padStart(4, '0')}</p>
+            </div>
+            <div class="text-right">
+              <p class="font-semibold">₹{(45000 * (i + 1)).toLocaleString('en-IN')}</p>
+              <p class="text-xs text-amber-600">Pending {3 + i} days</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </UiCard>
+  </div>
+</VendorShell>

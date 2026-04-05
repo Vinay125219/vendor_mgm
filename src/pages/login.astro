@@ -161,12 +161,23 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
             if (typeof token.accessToken === 'string' && typeof token.expiresAt === 'number') {
               // Store auth token in localStorage
               localStorage.setItem('vs_auth_token', token.accessToken);
-              localStorage.setItem('vs_auth_role', String(user.role || 'admin'));
-              localStorage.setItem('vs_auth_email', String(user.email || ''));
-              localStorage.setItem('vs_auth_expires', token.expiresAt.toString());
+              localStorage.setItem('vs_user_role', String(user.role || 'admin'));
+              localStorage.setItem('vs_user_email', String(user.email || ''));
+              localStorage.setItem('vs_token_expires', token.expiresAt.toString());
+
+              // Determine redirect URL based on role
+              let defaultDashboard = '/vendor';
+              if (user.role === 'super_admin' || user.role === 'admin') {
+                defaultDashboard = '/admin';
+              } else if (user.role === 'finance') {
+                defaultDashboard = '/finance';
+              } else if (user.role === 'support') {
+                defaultDashboard = '/support';
+              }
+              // vendor role stays at /vendor
 
               const params = new URLSearchParams(window.location.search);
-              const redirectTo = params.get('redirect') || '/vendor';
+              const redirectTo = params.get('redirect') || defaultDashboard;
               window.location.href = redirectTo;
               return;
             }

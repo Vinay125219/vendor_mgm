@@ -1,0 +1,99 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import KpiCard from '@/components/ui/KpiCard.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import UiBadge from '@/components/ui/UiBadge.astro';
+import ChartBlock from '@/components/islands/ChartBlock.astro';
+import {
+  getDashboardKpis,
+} from '@/services/dashboard.service';
+
+const kpis = getDashboardKpis();
+
+const ticketSpec = {
+  type: 'bar' as const,
+  labels: ['Open', 'In Progress', 'Resolved', 'Closed'],
+  datasets: [
+    {
+      label: 'Support Tickets',
+      data: [12, 28, 45, 58],
+      backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#22c55e'],
+    },
+  ],
+};
+
+const responseSpec = {
+  type: 'line' as const,
+  labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+  datasets: [
+    {
+      label: 'Avg Response Time (min)',
+      data: [45, 38, 42, 35, 40, 48, 52],
+      borderColor: 'rgb(59, 130, 246)',
+      backgroundColor: 'rgba(59, 130, 246, 0.12)',
+    },
+  ],
+};
+---
+
+<VendorShell title="Support Dashboard">
+  <PageHeader
+    title="Support & operations"
+    description="Ticket management, vendor support, and customer satisfaction metrics — support team coordination."
+  >
+    <UiButton href="/support/tickets" variant="primary" slot="actions">View tickets</UiButton>
+    <UiButton href="/support/vendors" variant="secondary" slot="actions">Vendor contacts</UiButton>
+  </PageHeader>
+
+  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <KpiCard label="Open tickets" value="12" hint="Awaiting response" />
+    <KpiCard label="In progress" value="28" trend="5 urgent" />
+    <KpiCard label="Resolved today" value="15" trend="+3 vs yesterday" trendUp />
+    <KpiCard
+      label="Avg response time"
+      value="32 min"
+      hint="SLA: <2 hours"
+      trendUp
+    />
+
+    <KpiCard label="Customer satisfaction" value="4.7/5" hint="92% positive" trendUp />
+    <KpiCard label="Active disputes" value={String(kpis.openDisputes)} hint="Escalated cases" />
+    <KpiCard label="Pending approvals" value={String(kpis.pendingApprovals)} hint="Vendor onboarding" />
+    <KpiCard label="Follow-ups needed" value="8" hint="Within 24h" />
+  </section>
+
+  <div class="mt-8 grid gap-6 lg:grid-cols-2">
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Support Tickets Status</h2>
+      <ChartBlock spec={ticketSpec} />
+    </UiCard>
+
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Response Time Trend</h2>
+      <ChartBlock spec={responseSpec} />
+    </UiCard>
+  </div>
+
+  <div class="mt-8 grid gap-6">
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Recent Support Tickets</h2>
+      <div class="space-y-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div class="flex items-center justify-between border-b border-vs-border py-3 last:border-b-0">
+            <div class="flex-1">
+              <p class="font-medium">Ticket #{String(10001 + i).padStart(5, '0')}</p>
+              <p class="text-sm text-vs-muted">Payment issue - Electronics Hub</p>
+            </div>
+            <div class="flex items-center gap-2">
+              {i === 0 && <UiBadge variant="error">Urgent</UiBadge>}
+              {i === 1 && <UiBadge variant="warning">High</UiBadge>}
+              {i > 1 && <UiBadge variant="success">Normal</UiBadge>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </UiCard>
+  </div>
+</VendorShell>

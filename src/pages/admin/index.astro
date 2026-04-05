@@ -1,0 +1,130 @@
+---
+import VendorShell from '@/layouts/VendorShell.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import KpiCard from '@/components/ui/KpiCard.astro';
+import UiCard from '@/components/ui/UiCard.astro';
+import UiButton from '@/components/ui/UiButton.astro';
+import ChartBlock from '@/components/islands/ChartBlock.astro';
+import {
+  getDashboardKpis,
+  getVendorGrowthSeries,
+  getPaymentStatusDistribution,
+  getFulfillmentTrends,
+  getRecentActivity,
+  getComplianceAlerts,
+} from '@/services/dashboard.service';
+import { formatDate, formatINRFromPaise } from '@/lib/format';
+
+const kpis = getDashboardKpis();
+const growth = getVendorGrowthSeries(5);
+const payDist = getPaymentStatusDistribution();
+const fulfill = getFulfillmentTrends();
+const activity = getRecentActivity();
+const alerts = getComplianceAlerts();
+
+const growthSpec = {
+  type: 'line' as const,
+  labels: growth.map((g) => g.date),
+  datasets: [
+    {
+      label: 'Active vendors',
+      data: growth.map((g) => g.value),
+      borderColor: 'rgb(99, 102, 241)',
+      backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    },
+  ],
+};
+
+const paySpec = {
+  type: 'doughnut' as const,
+  labels: payDist.map((p) => p.status),
+  datasets: [
+    {
+      label: 'Payments',
+      data: payDist.map((p) => p.count),
+      backgroundColor: ['#22c55e', '#eab308', '#ef4444', '#6366f1', '#94a3b8'],
+    },
+  ],
+};
+
+const fulfillSpec = {
+  type: 'bar' as const,
+  labels: fulfill.map((f) => f.date),
+  datasets: [
+    { label: 'Fulfilled', data: fulfill.map((f) => f.fulfilled), backgroundColor: 'rgba(16, 185, 129, 0.7)' },
+    { label: 'Pending', data: fulfill.map((f) => f.pending), backgroundColor: 'rgba(148, 163, 184, 0.5)' },
+  ],
+};
+---
+
+<VendorShell title="Admin Dashboard">
+  <PageHeader
+    title="Platform administration"
+    description="Vendor management, compliance monitoring, and operational metrics — admin-level view with full control."
+  >
+    <UiButton href="/admin/vendors" variant="primary" slot="actions">Manage vendors</UiButton>
+    <UiButton href="/admin/compliance" variant="secondary" slot="actions">Compliance</UiButton>
+  </PageHeader>
+
+  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <KpiCard label="Total vendors" value={String(kpis.totalVendors)} trend="+4 this month" trendUp />
+    <KpiCard label="Active vendors" value={String(kpis.activeVendors)} hint="KYC verified & trading" />
+    <KpiCard label="Pending approvals" value={String(kpis.pendingApprovals)} />
+    <KpiCard label="Suspended vendors" value={String(Math.floor(kpis.totalVendors * 0.05))} hint="Risk management" />
+
+    <KpiCard label="Open disputes" value={String(kpis.openDisputes)} />
+    <KpiCard label="Completed orders" value={String(kpis.completedOrders)} trend="7d moving avg" />
+    <KpiCard label="Gross revenue" value={formatINRFromPaise(kpis.grossRevenuePaise)} hint="Captured payments" />
+    <KpiCard
+      label="System health"
+      value="99.8%"
+      hint="Uptime this month"
+      trendUp
+    />
+  </section>
+
+  <div class="mt-8 grid gap-6 lg:grid-cols-2">
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Vendor Growth</h2>
+      <ChartBlock spec={growthSpec} />
+    </UiCard>
+
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Payment Status Distribution</h2>
+      <ChartBlock spec={paySpec} />
+    </UiCard>
+  </div>
+
+  <div class="mt-8 grid gap-6 lg:grid-cols-2">
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Fulfillment Trends</h2>
+      <ChartBlock spec={fulfillSpec} />
+    </UiCard>
+
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Compliance Alerts</h2>
+      <div class="space-y-3">
+        {alerts.slice(0, 5).map((a) => (
+          <div class="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm">
+            <span>{a.message}</span>
+            <span class="text-xs text-vs-muted">{formatDate(a.timestamp)}</span>
+          </div>
+        ))}
+      </div>
+    </UiCard>
+  </div>
+
+  <div class="mt-8">
+    <UiCard padding="lg">
+      <h2 class="mb-4 text-lg font-semibold">Recent Activities</h2>
+      <div class="space-y-2">
+        {activity.slice(0, 8).map((act) => (
+          <div class="flex items-center justify-between border-b border-vs-border py-2 text-sm last:border-b-0">
+            <span class="text-vs-muted">{act.action}</span>
+            <span class="text-xs text-vs-muted">{formatDate(act.timestamp)}</span>
+          </div>
+        ))}
+      </div>
+    </UiCard>
+  </div>
+</VendorShell>
