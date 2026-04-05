@@ -123,7 +123,6 @@ const stages: StoreOrder['fulfillmentStage'][] = ['unfulfilled', 'picking', 'pac
 
 <script is:inline>
   import { orderService, getErrorMessage } from '@/services/backend.service';
-  import type { StoreOrder } from '@/types';
 
   const formEl = document.getElementById('vs-order-stage-form');
   const oid = formEl?.getAttribute('data-order-id');
