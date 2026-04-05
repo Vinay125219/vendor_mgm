@@ -121,11 +121,10 @@ const stages: StoreOrder['fulfillmentStage'][] = ['unfulfilled', 'picking', 'pac
   </UiCard>
 </VendorShell>
 
-<script>
+<script is:inline>
   import { orderService, getErrorMessage } from '@/services/backend.service';
-  import type { StoreOrder } from '@/types';
 
-  const formEl = document.getElementById('vs-order-stage-form') as HTMLFormElement;
+  const formEl = document.getElementById('vs-order-stage-form');
   const oid = formEl?.getAttribute('data-order-id');
   const label = document.getElementById('vs-order-stage-label');
 
@@ -133,8 +132,8 @@ const stages: StoreOrder['fulfillmentStage'][] = ['unfulfilled', 'picking', 'pac
     e.preventDefault();
     if (!oid) return;
 
-    const submitBtn = formEl.querySelector('button[type="submit"]') as HTMLButtonElement;
-    const select = formEl.querySelector('select[name="fulfillmentStage"]') as HTMLSelectElement;
+    const submitBtn = formEl.querySelector('button[type="submit"]');
+    const select = formEl.querySelector('select[name="fulfillmentStage"]');
     const stage = select?.value;
 
     if (!stage) return;

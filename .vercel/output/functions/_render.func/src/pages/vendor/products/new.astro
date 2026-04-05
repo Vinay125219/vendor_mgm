@@ -62,12 +62,12 @@ import UiButton from '@/components/ui/UiButton.astro';
   </UiCard>
 </VendorShell>
 
-<script>
+<script is:inline>
   import { productService, getErrorMessage } from '@/services/backend.service';
 
-  const form = document.getElementById('vs-product-form') as HTMLFormElement;
+  const form = document.getElementById('vs-product-form');
   const errEl = document.getElementById('vs-product-err');
-  const submitBtn = document.getElementById('vs-product-submit') as HTMLButtonElement;
+  const submitBtn = document.getElementById('vs-product-submit');
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();

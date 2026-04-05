@@ -2,6 +2,7 @@
 import '@/styles/global.css';
 import { APP_NAME } from '@/lib/constants';
 import { ROLE_LABELS } from '@/lib/rbac';
+import { API_V1_PREFIX } from '@/types/api-contracts';
 import type { UserRole } from '@/types';
 
 const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 'vendor'];
@@ -93,7 +94,7 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
         <div class="mt-6 rounded-[var(--radius-vs-sm)] border border-dashed border-vs-border bg-vs-elevated/50 px-4 py-3 text-xs text-vs-muted">
           <p class="font-semibold text-vs-fg">Backend Integration Ready</p>
           <p class="mt-2 text-[11px] leading-relaxed">
-            This form submits to <code class="font-mono text-[10px] text-vs-fg">/api/v1/auth/login</code>
+            This form submits to <code class="font-mono text-[10px] text-vs-fg">{`${API_V1_PREFIX}/auth/login`}</code>
           </p>
           <p class="mt-2 text-[11px] leading-relaxed">
             Response format: success with token, user, and expiration
@@ -102,10 +103,11 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
       </div>
     </div>
 
-    <script>
-      const form = document.getElementById('vs-login-form') as HTMLFormElement;
+    <script is:inline define:vars={{ apiPrefix: API_V1_PREFIX }}>
+      const API_V1_PREFIX = apiPrefix;
+      const form = document.getElementById('vs-login-form');
       const errEl = document.getElementById('vs-login-error');
-      const submitBtn = document.getElementById('vs-submit-btn') as HTMLButtonElement;
+      const submitBtn = document.getElementById('vs-submit-btn');
 
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -122,46 +124,60 @@ const roleOrder: UserRole[] = ['super_admin', 'admin', 'finance', 'support', 've
             throw new Error('Email and password are required');
           }
 
-          const response = await fetch('/api/v1/auth/login', {
+          const response = await fetch(`${API_V1_PREFIX}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({ email, password }),
           });
 
-          const body = (await response.json()) as Record<string, unknown>;
+          const body = await response.json();
 
           if (!response.ok || typeof body !== 'object' || body === null) {
             throw new Error('Login failed. Please check your credentials.');
           }
 
           if ('error' in body && typeof body.error === 'object' && body.error !== null) {
-            const error = body.error as Record<string, unknown>;
+            const error = body.error;
             throw new Error(String(error.message || 'Login failed'));
           }
+
+          // Unwrap the response data
+          const data = body.data || body;
 
           if (
             'ok' in body &&
             body.ok === true &&
-            'token' in body &&
-            typeof body.token === 'object' &&
-            body.token !== null &&
-            'user' in body &&
-            typeof body.user === 'object' &&
-            body.user !== null
+            'token' in data &&
+            typeof data.token === 'object' &&
+            data.token !== null &&
+            'user' in data &&
+            typeof data.user === 'object' &&
+            data.user !== null
           ) {
-            const token = body.token as Record<string, unknown>;
-            const user = body.user as Record<string, unknown>;
+            const token = data.token;
+            const user = data.user;
 
             if (typeof token.accessToken === 'string' && typeof token.expiresAt === 'number') {
-              const { storeAuthToken } = await import('@/lib/client-auth');
-              storeAuthToken(
-                { accessToken: token.accessToken, expiresAt: token.expiresAt },
-                { email: String(user.email || ''), role: String(user.role || 'admin') as any }
-              );
+              // Store auth token in localStorage
+              localStorage.setItem('vs_auth_token', token.accessToken);
+              localStorage.setItem('vs_user_role', String(user.role || 'admin'));
+              localStorage.setItem('vs_user_email', String(user.email || ''));
+              localStorage.setItem('vs_token_expires', token.expiresAt.toString());
+
+              // Determine redirect URL based on role
+              let defaultDashboard = '/vendor';
+              if (user.role === 'super_admin' || user.role === 'admin') {
+                defaultDashboard = '/admin';
+              } else if (user.role === 'finance') {
+                defaultDashboard = '/finance';
+              } else if (user.role === 'support') {
+                defaultDashboard = '/support';
+              }
+              // vendor role stays at /vendor
 
               const params = new URLSearchParams(window.location.search);
-              const redirectTo = params.get('redirect') || '/vendor';
+              const redirectTo = params.get('redirect') || defaultDashboard;
               window.location.href = redirectTo;
               return;
             }

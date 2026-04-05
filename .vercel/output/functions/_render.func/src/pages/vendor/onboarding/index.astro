@@ -143,13 +143,13 @@ const steps = [
   </div>
 </VendorShell>
 
-<script>
+<script is:inline>
   import { vendorService, getErrorMessage } from '@/services/backend.service';
 
-  const form = document.getElementById('vs-onboard-form') as HTMLFormElement;
-  const submitBtn = document.getElementById('vs-submit-btn') as HTMLButtonElement;
+  const form = document.getElementById('vs-onboard-form');
+  const submitBtn = document.getElementById('vs-submit-btn');
   const errEl = document.getElementById('vs-onboard-error');
-  const draftBtn = document.getElementById('vs-save-draft') as HTMLElement;
+  const draftBtn = document.getElementById('vs-save-draft');
 
   // Load draft from localStorage
   function loadDraft() {
@@ -157,9 +157,9 @@ const steps = [
       const draftKey = 'vs_onboarding_draft';
       const saved = localStorage.getItem(draftKey);
       if (saved) {
-        const data = JSON.parse(saved) as Record<string, string>;
+        const data = JSON.parse(saved);
         for (const [key, value] of Object.entries(data)) {
-          const input = form.querySelector(`[name="${key}"]`) as HTMLInputElement | null;
+          const input = form.querySelector(`[name="${key}"]`);
           if (input) input.value = value;
         }
       }

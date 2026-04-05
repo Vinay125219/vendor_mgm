@@ -2,7 +2,7 @@
 import '@/styles/global.css';
 import { APP_NAME, VENDOR_BASE_PATH } from '@/lib/constants';
 import { ROLE_LABELS } from '@/lib/rbac';
-import { vendorNav } from '@/components/navigation/nav-items';
+import { adminNav, financeNav, supportNav, vendorNav } from '@/components/navigation/nav-items';
 import NavIcon from '@/components/navigation/NavIcon.astro';
 import ThemeToggle from '@/components/islands/ThemeToggle.astro';
 import ToastHost from '@/components/islands/ToastHost.astro';
@@ -14,9 +14,23 @@ interface Props {
   description?: string;
 }
 
-const { title, description = 'Vendor operations cockpit' } = Astro.props;
+const { title, description = 'Operations cockpit' } = Astro.props;
 const path = Astro.url.pathname;
 const seedUnread = mockNotifications.filter((n) => !n.read).length;
+
+// Determine navigation based on current path
+let currentNav = vendorNav;
+let workspaceTitle = 'Vendor Portal';
+if (path.startsWith('/admin')) {
+  currentNav = adminNav;
+  workspaceTitle = 'Platform Admin';
+} else if (path.startsWith('/finance')) {
+  currentNav = financeNav;
+  workspaceTitle = 'Finance Operations';
+} else if (path.startsWith('/support')) {
+  currentNav = supportNav;
+  workspaceTitle = 'Support Center';
+}
 ---
 
 <!doctype html>
@@ -70,7 +84,7 @@ const seedUnread = mockNotifications.filter((n) => !n.read).length;
         </div>
         <nav class="flex flex-col gap-0.5 p-3">
           {
-            vendorNav.map((item) => {
+            currentNav.map((item) => {
               const active = path === item.href || path.startsWith(item.href + '/');
               return (
                 <a
@@ -119,7 +133,7 @@ const seedUnread = mockNotifications.filter((n) => !n.read).length;
               </svg>
             </button>
             <div>
-              <p class="text-xs font-semibold uppercase tracking-wider text-vs-muted">Workspace</p>
+              <p class="text-xs font-semibold uppercase tracking-wider text-vs-muted">{workspaceTitle}</p>
               <p class="text-sm font-semibold text-vs-fg">{title}</p>
             </div>
           </div>

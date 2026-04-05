@@ -1,0 +1,1 @@
+import{g as a,s}from"./client-auth.HzRU0ipw.js";document.querySelectorAll("[data-vs-sa-role]").forEach(e=>{e.value=a(),e.addEventListener("change",()=>{const o=a(),t=e.value;if(t===o)return;const r=s(t);if(!r.ok){window.dispatchEvent(new CustomEvent("vs:toast",{detail:{message:r.message||"Could not switch role",level:"error"}})),e.value=o;return}window.location.reload()})});
